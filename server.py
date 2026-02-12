@@ -45,6 +45,16 @@ class ADUHandler(SimpleHTTPRequestHandler):
         if self.path == '/' or self.path == '/health':
             # Health check endpoint for Railway
             self.send_json_response({'status': 'ok', 'message': 'ADU Dashboard API is running'})
+        elif self.path == '/debug/env':
+            # Debug endpoint to see environment variables (remove in production)
+            env_debug = {
+                'VITE_WHITELISTED_EMAILS': os.getenv('VITE_WHITELISTED_EMAILS', 'NOT SET'),
+                'WHITELISTED_EMAILS': os.getenv('WHITELISTED_EMAILS', 'NOT SET'),
+                'PORT': os.getenv('PORT', 'NOT SET'),
+                'RAILWAY_ENVIRONMENT': os.getenv('RAILWAY_ENVIRONMENT', 'NOT SET'),
+                'ALLOWED_EMAILS': ALLOWED_EMAILS
+            }
+            self.send_json_response(env_debug)
         elif self.path == '/api/data':
             self.get_adu_data()
         elif self.path == '/api/refresh':
