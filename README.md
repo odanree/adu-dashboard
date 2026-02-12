@@ -27,7 +27,6 @@ A modern React + TypeScript dashboard for tracking ADU construction progress, ex
 
 ```bash
 # Terminal 1: Start Python backend API
-cd 
 python3 server.py
 # Runs at http://localhost:8888
 ```
@@ -36,7 +35,6 @@ python3 server.py
 
 ```bash
 # Terminal 2: Start React development server
-cd 
 npm install  # if needed
 npm run dev
 # Opens at http://localhost:5173

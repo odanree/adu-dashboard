@@ -4,7 +4,6 @@
 
 ```bash
 # Terminal 1: Start Backend
-cd 
 python3 server.py
 # Runs on http://localhost:8888
 
