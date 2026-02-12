@@ -13,8 +13,11 @@ from pathlib import Path
 from urllib.parse import unquote
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
-load_dotenv()
+# Load environment variables from .env file (for local dev only)
+try:
+    load_dotenv()
+except:
+    pass  # Not available in production container
 
 # Email whitelist - loaded from environment variable (try multiple names)
 WHITELISTED_EMAILS_STR = os.getenv('VITE_WHITELISTED_EMAILS') or os.getenv('WHITELISTED_EMAILS', '')
