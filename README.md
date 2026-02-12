@@ -1,5 +1,13 @@
 # ADU Construction Progress Dashboard
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![Node.js](https://img.shields.io/badge/Node.js-16%2B-green)](https://nodejs.org/)
+[![Python](https://img.shields.io/badge/Python-3.11%2B-blue)](https://www.python.org/)
+[![React](https://img.shields.io/badge/React-18.x-61DAFB?logo=react)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-5.x-646CFF?logo=vite)](https://vitejs.dev/)
+[![Code of Conduct](https://img.shields.io/badge/Code%20of%20Conduct-Contributor%20Covenant-blue)](./CODE_OF_CONDUCT.md)
+
 A modern React + TypeScript dashboard for tracking ADU construction progress, expenses, and milestones with real-time backend data management.
 
 ## 🎯 Features
@@ -44,27 +52,48 @@ Then open: **http://localhost:5173**
 
 ## 📋 Root Organization
 
-This project follows **industry-standard conventions** for a clean, professional root directory:
+This project follows **industry-standard conventions** for clean, professional structure:
 
-**Root contains only essential files:**
-- Configuration files (`.env`, `.gitignore`, `tsconfig.json`, etc.)
-- Build/runtime configuration (`vite.config.ts`, `tailwind.config.js`, `jest.config.js`)
-- Package management (`package.json`, `package-lock.json`)
-- Core backend (`server.py`)
-- Entry point (`index.html`)
+### Root Directory
 
-**All documentation organized in `/docs`:**
-- 10 markdown files covering every aspect
-- See [📁 Project Structure](#-project-structure) section below for details
-- All README links point to `/docs/` for easy maintenance
+**Documentation & Governance:**
+- [`README.md`](./README.md) - Main project documentation (you are here)
+- [`CONTRIBUTING.md`](./CONTRIBUTING.md) - Contribution guidelines and workflow
+- [`LICENSE`](./LICENSE) - MIT License
+- [`SECURITY.md`](./SECURITY.md) - Security policy and reporting
+- [`CODE_OF_CONDUCT.md`](./CODE_OF_CONDUCT.md) - Community standards
 
-**Directories for source code:**
-- `src/` - React components and application code
-- `api/` - API routes and handlers
-- `assets/` - Static files and images
-- `tests/` - Test suites
+**Configuration:**
+- `package.json` / `package-lock.json` - Node dependencies
+- `tsconfig.json` - TypeScript configuration
+- `vite.config.ts` - Build configuration
+- `tailwind.config.js` - CSS framework
+- `postcss.config.js` - CSS processing
+- `eslint.config.mjs` - Code linting
+- `jest.config.js` - Test framework
+- `.env.example` - Environment template
+- `.gitignore` - Git ignore rules
+- `vercel.json` - Deployment config
+
+**Application:**
+- `server.py` - Python backend API
+- `index.html` - React entry point
+
+### Subdirectories
+
+- **`/docs/`** - Comprehensive documentation (10+ markdown files)
+- **`/src/`** - React components and application code
+- **`/api/`** - Backend API routes
+- **`/assets/`** - Static files and images
+- **`/tests/`** - Test suites (Jest + Playwright E2E)
 
 ## 📚 Documentation
+
+### Root Documentation
+- **[Contributing Guide](./CONTRIBUTING.md)** - How to contribute, branch workflow, PR process
+- **[Security Policy](./SECURITY.md)** - Reporting vulnerabilities, security best practices
+- **[Code of Conduct](./CODE_OF_CONDUCT.md)** - Community standards and expectations
+- **[License](./LICENSE)** - MIT License
 
 ### Getting Started
 - **[Quick Reference](./docs/QUICK_REFERENCE.md)** - Commands, budget, emails, and quick lookup
