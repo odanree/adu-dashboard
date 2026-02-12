@@ -10,11 +10,6 @@
     }
   ],
   "git": {
-    "deploymentEnabled": {
-      "main": false,
-      "master": true,
-      "develop": false
-    },
     "deploymentEnabledForPullRequests": false
   }
 }
