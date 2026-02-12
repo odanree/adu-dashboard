@@ -4,6 +4,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { formatCurrency } from '@utils/formatters'
+import apiClient from '@services/api'
 
 interface SignOffData {
   signedOffCount: number
@@ -27,9 +28,8 @@ export const SignOffStatus: React.FC<SignOffStatusProps> = () => {
   useEffect(() => {
     const loadSignOffStatus = async () => {
       try {
-        const response = await fetch('/api/expenses-signoff')
-        if (!response.ok) throw new Error('Failed to load sign-off status')
-        const result = await response.json()
+        const response = await apiClient.get('/api/expenses-signoff')
+        const result = response.data
         if (result.success && result.signOff) {
           setData(result.signOff)
         }

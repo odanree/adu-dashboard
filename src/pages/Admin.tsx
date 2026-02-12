@@ -4,6 +4,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { formatCurrency } from '@utils/formatters'
+import apiClient from '@services/api'
 import '../styles/Admin.css'
 
 interface ExpenseItem {
@@ -36,9 +37,8 @@ export const Admin: React.FC = () => {
   const fetchData = async () => {
     try {
       setLoading(true)
-      const response = await fetch('http://localhost:8888/api/data')
-      const result = await response.json()
-      setData(result)
+      const response = await apiClient.get('/api/data')
+      setData(response.data)
       setError(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load data')
@@ -88,13 +88,9 @@ export const Admin: React.FC = () => {
   const saveData = async () => {
     try {
       setSaved(false)
-      const response = await fetch('http://localhost:8888/api/data', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      })
+      const response = await apiClient.post('/api/data', data)
       
-      if (!response.ok) throw new Error('Failed to save')
+      if (!response) throw new Error('Failed to save')
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
     } catch (err) {
