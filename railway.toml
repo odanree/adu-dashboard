@@ -1,0 +1,13 @@
+[build]
+builder = "nixpacks"
+buildCommand = "echo 'No build needed for Python server'"
+
+[deploy]
+startCommand = "python3 server.py"
+healthcheckPath = "/health"
+healthcheckTimeout = 300
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
+
+[nixpacks]
+providers = ["python"]
