@@ -238,8 +238,11 @@ class ADUHandler(SimpleHTTPRequestHandler):
 
 if __name__ == '__main__':
     os.chdir(Path(__file__).parent)
-    server = HTTPServer(('localhost', 8888), ADUHandler)
-    print("🚀 ADU Dashboard running at http://localhost:8888")
+    # Use PORT env variable (Railway sets this), default to 8888 for local dev
+    port = int(os.getenv('PORT', 8888))
+    host = '0.0.0.0' if os.getenv('RAILWAY_ENVIRONMENT') else 'localhost'
+    server = HTTPServer((host, port), ADUHandler)
+    print(f"🚀 ADU Dashboard running at http://{host}:{port}")
     print("📊 API endpoints:")
     print("   - GET /api/data → Latest ADU data")
     print("   - GET /api/refresh → Force refresh")
