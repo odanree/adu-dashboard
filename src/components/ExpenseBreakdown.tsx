@@ -5,14 +5,13 @@
 
 import React, { useState } from 'react'
 import { formatCurrency } from '@utils/formatters'
-import type { ExpenseCategory } from '@types'
+import type { ExpenseCategory, ExpenseItem } from '@types'
 import Modal from './Modal'
 import { CumulativeSummary } from './CumulativeSummary'
 
 interface ExpenseBreakdownProps {
   categories: ExpenseCategory[]
   isSignedIn: boolean
-  isWhitelisted?: boolean
   onModeChange?: (mode: 'expand' | 'cumulative') => void
   onSelectionChange?: (selected: Set<string>) => void
 }
@@ -27,7 +26,6 @@ interface TooltipPosition {
 export const ExpenseBreakdown: React.FC<ExpenseBreakdownProps> = ({
   categories,
   isSignedIn,
-  isWhitelisted = false,
   onModeChange,
   onSelectionChange,
 }) => {
@@ -79,8 +77,8 @@ export const ExpenseBreakdown: React.FC<ExpenseBreakdownProps> = ({
   }
 
   return (
-    <div className="overflow-visible">
-      <h3 className="text-lg font-bold mb-3 text-gray-900">💰 Expense Breakdown by Phase</h3>
+    <div className="overflow-visible" data-testid="expense-breakdown">
+      <h3 data-testid="expense-breakdown-title" className="text-lg font-bold mb-3 text-gray-900">💰 Expense Breakdown by Phase</h3>
 
       {/* Mode Toggle Buttons */}
       <div className="flex gap-2 mb-3 flex-col md:flex-row relative z-40">
@@ -131,7 +129,7 @@ export const ExpenseBreakdown: React.FC<ExpenseBreakdownProps> = ({
         <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-l-4 border-green-500 rounded-lg shadow-lg p-5 mb-3">
           <CumulativeSummary
             total={Array.from(selectedPhases).reduce((sum: number, categoryName) => {
-              const category = categories.find((c: any) => c.category === categoryName)
+              const category = categories.find((c: ExpenseCategory) => c.category === categoryName)
               return sum + (category?.total || 0)
             }, 0)}
             selectedCount={selectedPhases.size}
@@ -196,7 +194,7 @@ export const ExpenseBreakdown: React.FC<ExpenseBreakdownProps> = ({
         <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
           <div className="text-xs font-medium text-gray-600">Total Expenses</div>
           <div className="text-xl font-bold text-primary-500">
-            {formatCurrency(categories.reduce((sum: number, cat: any) => sum + cat.total, 0))}
+            {formatCurrency(categories.reduce((sum: number, cat: ExpenseCategory) => sum + cat.total, 0))}
           </div>
         </div>
       ) : null}
@@ -215,7 +213,7 @@ export const ExpenseBreakdown: React.FC<ExpenseBreakdownProps> = ({
           <div className="space-y-0 h-full flex flex-col">
             {/* Items List */}
             <div className="divide-y divide-gray-200 flex-1">
-              {selectedCategory.items.map((item: any, idx: number) => (
+              {selectedCategory.items.map((item: ExpenseItem, idx: number) => (
                 <div
                   key={idx}
                   className="flex justify-between items-start py-2 px-1 hover:bg-indigo-50 transition-colors rounded"

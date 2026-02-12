@@ -63,7 +63,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
   }, [progress, mounted])
 
   return (
-    <div className="w-full">
+    <div className="w-full" data-testid="progress-bar-container">
       {/* Progress label */}
       <div className="mb-1 text-center text-xs font-medium text-gray-600">
         Project Progress: <span className="text-primary-600 font-bold">{displayPercent}%</span>

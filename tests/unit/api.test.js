@@ -77,8 +77,8 @@ describe('sheets-link API', () => {
       });
     });
 
-    test('returns URL for whitelisted email: johnny@example.com', () => {
-      mockRequest.query = { email: 'johnny@example.com' };
+    test('returns URL for whitelisted email: contractor@example.com', () => {
+      mockRequest.query = { email: 'contractor@example.com' };
 
       handler(mockRequest, mockResponse);
 
@@ -102,7 +102,7 @@ describe('sheets-link API', () => {
     });
 
     test('is case-insensitive for email check', () => {
-      mockRequest.query = { email: 'DTLE82@GMAIL.COM' };
+      mockRequest.query = { email: 'TEST@EXAMPLE.COM' };
 
       handler(mockRequest, mockResponse);
 

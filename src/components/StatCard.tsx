@@ -21,6 +21,7 @@ export const StatCard: React.FC<StatCardProps> = ({
 }) => {
   return (
     <div
+      data-testid={`stat-card-${label.toLowerCase().replace(/\s+/g, '-')}`}
       className={`p-3 rounded-lg transition-all hover:shadow-md text-center ${
         highlight
           ? 'bg-gradient-to-br from-primary-400 to-primary-600 text-white shadow-lg'

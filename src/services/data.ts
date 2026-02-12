@@ -3,27 +3,9 @@
  */
 
 import apiClient from './api'
-import type { ADUData, ExpenseCategory, PaymentMilestone } from '@types'
+import type { ADUData, ExpenseCategory } from '@types'
 
 const FALLBACK_DATA: ADUData = {
-  payments: [
-    {
-      num: 1,
-      title: 'Initial Deposit & Site Mobilization',
-      planned: 21800,
-      actual: 21800,
-    },
-    { num: 2, title: 'Foundation & Under-Slab Inspection', planned: 26000, actual: 47800 },
-    { num: 3, title: 'Rough MEP Inspection', planned: 34100, actual: 47800 },
-    { num: 4, title: 'Framing Inspection / Dry-In', planned: 28000, actual: 47800 },
-    {
-      num: 5,
-      title: 'Insulation & Drywall Inspections',
-      planned: 59000,
-      actual: 47800,
-    },
-    { num: 6, title: 'Final Inspection & Project Completion', planned: 56300, actual: 47800 },
-  ],
   expenses: [
     // Phase 1: Site Mobilization
     { category: 'Phase 1: Site Mobilization', items: [{ task: 'Architect and Engineering', cost: 8000 }], total: 21800, phase: 1 },
@@ -94,13 +76,6 @@ export const dataService = {
    */
   calculateTotalExpenses(expenses: ExpenseCategory[]): number {
     return expenses.reduce((sum, category) => sum + category.total, 0)
-  },
-
-  /**
-   * Calculate total payments
-   */
-  calculateTotalPayments(payments: PaymentMilestone[]): number {
-    return payments.reduce((sum, payment) => sum + payment.actual, 0)
   },
 
   /**

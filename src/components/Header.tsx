@@ -16,8 +16,8 @@ declare global {
     google?: {
       accounts?: {
         id?: {
-          initialize: (config: any) => void
-          renderButton: (element: HTMLElement, config: any) => void
+          initialize: (config: Record<string, unknown>) => void
+          renderButton: (element: HTMLElement, config: Record<string, unknown>) => void
           revoke: (email: string) => void
         }
       }
@@ -42,8 +42,8 @@ export const Header: React.FC<HeaderProps> = ({ isSignedIn, email, onSignOut, on
         // Initialize Google Sign-In
         window.google.accounts.id.initialize({
           client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || '1234567890.apps.googleusercontent.com',
-          callback: (response: any) => {
-            if (response.credential) {
+          callback: (response: Record<string, unknown>) => {
+            if (response.credential && typeof response.credential === 'string') {
               // Handle the JWT credential
               try {
                 const payload = JSON.parse(atob(response.credential.split('.')[1]))
@@ -77,6 +77,7 @@ export const Header: React.FC<HeaderProps> = ({ isSignedIn, email, onSignOut, on
 
   return (
     <header
+      data-testid="header"
       className={`sticky top-0 z-40 transition-all duration-200 ${
         scrolled ? 'shadow-lg' : ''
       } bg-opacity-95 backdrop-blur`}
@@ -89,7 +90,7 @@ export const Header: React.FC<HeaderProps> = ({ isSignedIn, email, onSignOut, on
       <div className="container mx-auto px-4 py-2 flex flex-col md:flex-row items-start md:items-center justify-between max-w-6xl gap-4 md:gap-0">
         {/* Logo */}
         <div className="flex items-center gap-2">
-          <h1 className="text-2xl font-bold text-white">🏗️ ADU Dashboard</h1>
+          <h1 data-testid="header-title" className="text-2xl font-bold text-white">🏗️ ADU Dashboard</h1>
         </div>
 
         {/* Auth Section */}
