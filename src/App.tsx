@@ -14,6 +14,7 @@ import Header from '@components/Header'
 import SignOffSection from '@components/SignOffSection'
 import SignOffStatus from '@components/SignOffStatus'
 import TestSignIn from '@components/TestSignIn'
+import type { ExpenseCategory } from '@types'
 import './App.css'
 
 const PROJECT_START_DATE = new Date('2025-10-08')
@@ -66,21 +67,21 @@ export const App: React.FC = () => {
   // Filter expenses based on whitelist status - hide OHP from non-whitelisted users
   const visibleExpenses = isWhitelisted 
     ? data.expenses 
-    : data.expenses.filter((e: any) => e.category !== 'OHP (Overhead & Profit)')
+    : data.expenses.filter((e: ExpenseCategory) => e.category !== 'OHP (Overhead & Profit)')
   
   // Calculate metrics - whitelisted users see full budget, others see project cost only
   const totalBudget = isWhitelisted ? 225200 : 214076
-  const paidExpenses = visibleExpenses.filter((e: any) => e.phase === 1 || e.phase === 2)
-  const totalSpent = paidExpenses.reduce((sum: number, e: any) => sum + e.total, 0)
+  const paidExpenses = visibleExpenses.filter((e: ExpenseCategory) => e.phase === 1 || e.phase === 2)
+  const totalSpent = paidExpenses.reduce((sum: number, e: ExpenseCategory) => sum + e.total, 0)
   const remaining = totalBudget - totalSpent
   const progress = Math.round((totalSpent / totalBudget) * 100)
   const projectDuration = calculateProjectDuration(PROJECT_START_DATE)
 
   // Create milestones for progress bar - use visible expense phases as milestones
-  const milestones = visibleExpenses.map((expense: any, idx: number) => {
+  const milestones = visibleExpenses.map((expense: ExpenseCategory, idx: number) => {
     const cumulativePercent = visibleExpenses
       .slice(0, idx + 1)
-      .reduce((sum: number, e: any) => sum + e.total, 0) / totalBudget * 100
+      .reduce((sum: number, e: ExpenseCategory) => sum + e.total, 0) / totalBudget * 100
     
     return {
       name: MILESTONE_DATA[idx]?.title || expense.category,
@@ -143,7 +144,7 @@ export const App: React.FC = () => {
 
         {/* Contractor's Expense Sign-Off Card */}
         <div className="bg-white rounded-lg shadow-lg p-3 mb-1" data-testid="sign-off-section">
-          <h3 className="text-lg font-bold mb-3 text-gray-900">🔐 Contractor's Expense Sign-Off</h3>
+          <h3 className="text-lg font-bold mb-3 text-gray-900">🔐 Contractor&apos;s Expense Sign-Off</h3>
           {!isSignedIn ? (
             <p className="text-sm text-gray-600">Sign in to view expense sign-off progress</p>
           ) : (

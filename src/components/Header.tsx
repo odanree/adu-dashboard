@@ -16,8 +16,8 @@ declare global {
     google?: {
       accounts?: {
         id?: {
-          initialize: (config: any) => void
-          renderButton: (element: HTMLElement, config: any) => void
+          initialize: (config: Record<string, unknown>) => void
+          renderButton: (element: HTMLElement, config: Record<string, unknown>) => void
           revoke: (email: string) => void
         }
       }
@@ -42,7 +42,7 @@ export const Header: React.FC<HeaderProps> = ({ isSignedIn, email, onSignOut, on
         // Initialize Google Sign-In
         window.google.accounts.id.initialize({
           client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || '1234567890.apps.googleusercontent.com',
-          callback: (response: any) => {
+          callback: (response: Record<string, unknown>) => {
             if (response.credential) {
               // Handle the JWT credential
               try {
