@@ -93,14 +93,18 @@ class ADUHandler(SimpleHTTPRequestHandler):
             params = dict(param.split('=') for param in query_string.split('&') if '=' in param)
             user_email = unquote(params.get('email', '')).lower()
             
+            # Dynamically load allowed emails from environment (in case they changed)
+            whitelisted_str = os.getenv('VITE_WHITELISTED_EMAILS') or os.getenv('WHITELISTED_EMAILS', '')
+            allowed_emails = [email.strip().lower() for email in whitelisted_str.split(',') if email.strip()]
+            
             # Debug logging
             print(f"Query string: {query_string}")
             print(f"Raw email param: {params.get('email', '')}")
             print(f"Extracted email: {user_email}")
-            print(f"Allowed emails: {ALLOWED_EMAILS}")
-            print(f"Email in whitelist: {user_email in ALLOWED_EMAILS}")
+            print(f"Allowed emails: {allowed_emails}")
+            print(f"Email in whitelist: {user_email in allowed_emails}")
             
-            if user_email in ALLOWED_EMAILS:
+            if user_email in allowed_emails:
                 response = {
                     'authorized': True,
                     'url': 'https://docs.google.com/spreadsheets/d/1ZTX4H7qQPVZcU4TwoXcOVdbovHmRy3DZrcdfA3Qw2wk/edit?gid=361465694'
