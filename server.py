@@ -20,6 +20,16 @@ ALLOWED_EMAILS = [email.strip().lower() for email in WHITELISTED_EMAILS_STR.spli
 DATA_FILE = Path(__file__).parent / 'data.json'
 
 class ADUHandler(SimpleHTTPRequestHandler):
+    def send_json_response(self, data, status=200):
+        """Helper to send JSON with CORS headers"""
+        self.send_response(status)
+        self.send_header('Content-type', 'application/json')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.end_headers()
+        self.wfile.write(json.dumps(data).encode())
+    
     def do_GET(self):
         if self.path == '/api/data':
             self.get_adu_data()
@@ -62,11 +72,6 @@ class ADUHandler(SimpleHTTPRequestHandler):
             print(f"Allowed emails: {ALLOWED_EMAILS}")
             print(f"Email in whitelist: {user_email in ALLOWED_EMAILS}")
             
-            self.send_response(200)
-            self.send_header('Content-type', 'application/json')
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.end_headers()
-            
             if user_email in ALLOWED_EMAILS:
                 response = {
                     'authorized': True,
@@ -78,12 +83,9 @@ class ADUHandler(SimpleHTTPRequestHandler):
                     'message': 'Access denied. Only authorized users can access the expense sheet.'
                 }
             
-            self.wfile.write(json.dumps(response).encode())
+            self.send_json_response(response)
         except Exception as e:
-            self.send_response(400)
-            self.send_header('Content-type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps({'error': str(e)}).encode())
+            self.send_json_response({'error': str(e)}, 400)
     
     def get_expenses_signoff(self):
         """Return mock expense sign-off status for testing"""
@@ -102,17 +104,9 @@ class ADUHandler(SimpleHTTPRequestHandler):
                     'percentComplete': 0
                 }
             }
-            
-            self.send_response(200)
-            self.send_header('Content-type', 'application/json')
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.end_headers()
-            self.wfile.write(json.dumps(response).encode())
+            self.send_json_response(response)
         except Exception as e:
-            self.send_response(500)
-            self.send_header('Content-type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps({'error': str(e)}).encode())
+            self.send_json_response({'error': str(e)}, 500)
     
     def get_adu_data(self):
         """Fetch ADU data from Google Sheets"""
@@ -176,24 +170,15 @@ class ADUHandler(SimpleHTTPRequestHandler):
                     'lastUpdated': datetime.now().isoformat()
                 }
                 
-                self.send_response(200)
-                self.send_header('Content-type', 'application/json')
-                self.send_header('Access-Control-Allow-Origin', '*')
-                self.end_headers()
-                self.wfile.write(json.dumps(data).encode())
+                self.send_json_response(data)
                 return
         
         except Exception as e:
             print(f"Error fetching data: {e}")
         
         # Fallback to cached data
-        self.send_response(200)
-        self.send_header('Content-type', 'application/json')
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.end_headers()
-        
         fallback = self.get_fallback_data()
-        self.wfile.write(json.dumps(fallback).encode())
+        self.send_json_response(fallback)
     
     def save_adu_data(self):
         """Save ADU data to JSON file"""
@@ -206,19 +191,11 @@ class ADUHandler(SimpleHTTPRequestHandler):
             with open(DATA_FILE, 'w') as f:
                 json.dump(data, f, indent=2)
             
-            self.send_response(200)
-            self.send_header('Content-type', 'application/json')
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.end_headers()
-            self.wfile.write(json.dumps({'success': True, 'message': 'Data saved'}).encode())
+            self.send_json_response({'success': True, 'message': 'Data saved'})
             print(f"✅ Data saved at {datetime.now().isoformat()}")
         except Exception as e:
             print(f"Error saving data: {e}")
-            self.send_response(400)
-            self.send_header('Content-type', 'application/json')
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.end_headers()
-            self.wfile.write(json.dumps({'error': str(e)}).encode())
+            self.send_json_response({'error': str(e)}, 400)
     
     def get_fallback_data(self):
         """Load fallback data from file or return defaults"""
