@@ -8,3 +8,6 @@ healthcheckPath = "/health"
 healthcheckTimeout = 300
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
+
+[env]
+WHITELISTED_EMAILS = "dtle82@gmail.com,johnnynguyen9299@yahoo.com"
