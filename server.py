@@ -20,6 +20,9 @@ load_dotenv()
 WHITELISTED_EMAILS_STR = os.getenv('VITE_WHITELISTED_EMAILS', '')
 ALLOWED_EMAILS = [email.strip().lower() for email in WHITELISTED_EMAILS_STR.split(',') if email.strip()]
 
+print(f"DEBUG: VITE_WHITELISTED_EMAILS = '{WHITELISTED_EMAILS_STR}'")
+print(f"DEBUG: ALLOWED_EMAILS = {ALLOWED_EMAILS}")
+
 if not ALLOWED_EMAILS:
     print("WARNING: No whitelisted emails configured. Set VITE_WHITELISTED_EMAILS environment variable.")
 
