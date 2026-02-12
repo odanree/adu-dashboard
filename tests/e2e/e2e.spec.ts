@@ -114,3 +114,129 @@ test.describe('ADU Dashboard', () => {
     await expect(mainContent).toBeVisible();
   });
 });
+
+test.describe('Privacy & Terms Pages', () => {
+  test('privacy link navigates to privacy page', async ({ page }) => {
+    await page.goto(BASE_URL);
+    // Wait for footer to be ready
+    await page.locator('[data-testid="main-content"]').waitFor({ timeout: 5000 });
+    
+    // Find and click privacy link in footer
+    const privacyButton = page.locator('footer').locator('button', { hasText: /Privacy Policy/i });
+    await privacyButton.click();
+    
+    // Wait for privacy page content
+    await page.locator('h1').filter({ hasText: /Privacy Policy/i }).waitFor({ timeout: 5000 });
+    
+    // Verify page loaded
+    const heading = page.locator('h1').filter({ hasText: /Privacy Policy/i });
+    await expect(heading).toBeVisible();
+  });
+
+  test('terms link navigates to terms page', async ({ page }) => {
+    await page.goto(BASE_URL);
+    // Wait for footer to be ready
+    await page.locator('[data-testid="main-content"]').waitFor({ timeout: 5000 });
+    
+    // Find and click terms link in footer
+    const termsButton = page.locator('footer').locator('button', { hasText: /Terms of Service/i });
+    await termsButton.click();
+    
+    // Wait for terms page content
+    await page.locator('h1').filter({ hasText: /Terms of Service/i }).waitFor({ timeout: 5000 });
+    
+    // Verify page loaded
+    const heading = page.locator('h1').filter({ hasText: /Terms of Service/i });
+    await expect(heading).toBeVisible();
+  });
+
+  test('privacy page has back to dashboard button', async ({ page }) => {
+    await page.goto(BASE_URL);
+    // Wait for footer to be ready
+    await page.locator('[data-testid="main-content"]').waitFor({ timeout: 5000 });
+    
+    // Navigate to privacy page
+    const privacyButton = page.locator('footer').locator('button', { hasText: /Privacy Policy/i });
+    await privacyButton.click();
+    
+    // Wait for privacy page
+    await page.locator('h1').filter({ hasText: /Privacy Policy/i }).waitFor({ timeout: 5000 });
+    
+    // Find back button
+    const backButton = page.locator('button').filter({ hasText: /Back to Dashboard/i });
+    await expect(backButton).toBeVisible();
+    
+    // Click back button
+    await backButton.click();
+    
+    // Verify we're back on dashboard
+    await page.locator('[data-testid="main-content"]').waitFor({ timeout: 5000 });
+    const mainContent = await page.locator('[data-testid="main-content"]');
+    await expect(mainContent).toBeVisible();
+  });
+
+  test('terms page has back to dashboard button', async ({ page }) => {
+    await page.goto(BASE_URL);
+    // Wait for footer to be ready
+    await page.locator('[data-testid="main-content"]').waitFor({ timeout: 5000 });
+    
+    // Navigate to terms page
+    const termsButton = page.locator('footer').locator('button', { hasText: /Terms of Service/i });
+    await termsButton.click();
+    
+    // Wait for terms page
+    await page.locator('h1').filter({ hasText: /Terms of Service/i }).waitFor({ timeout: 5000 });
+    
+    // Find back button
+    const backButton = page.locator('button').filter({ hasText: /Back to Dashboard/i });
+    await expect(backButton).toBeVisible();
+    
+    // Click back button
+    await backButton.click();
+    
+    // Verify we're back on dashboard
+    await page.locator('[data-testid="main-content"]').waitFor({ timeout: 5000 });
+    const mainContent = await page.locator('[data-testid="main-content"]');
+    await expect(mainContent).toBeVisible();
+  });
+
+  test('privacy page displays content sections', async ({ page }) => {
+    await page.goto(BASE_URL);
+    // Wait for footer to be ready
+    await page.locator('[data-testid="main-content"]').waitFor({ timeout: 5000 });
+    
+    // Navigate to privacy page
+    const privacyButton = page.locator('footer').locator('button', { hasText: /Privacy Policy/i });
+    await privacyButton.click();
+    
+    // Wait for privacy page
+    await page.locator('h1').filter({ hasText: /Privacy Policy/i }).waitFor({ timeout: 5000 });
+    
+    // Check for key sections
+    const infoSection = page.locator('h3').filter({ hasText: /Information We Collect/i });
+    await expect(infoSection).toBeVisible();
+    
+    const usageSection = page.locator('h3').filter({ hasText: /How We Use Your Information/i });
+    await expect(usageSection).toBeVisible();
+  });
+
+  test('terms page displays content sections', async ({ page }) => {
+    await page.goto(BASE_URL);
+    // Wait for footer to be ready
+    await page.locator('[data-testid="main-content"]').waitFor({ timeout: 5000 });
+    
+    // Navigate to terms page
+    const termsButton = page.locator('footer').locator('button', { hasText: /Terms of Service/i });
+    await termsButton.click();
+    
+    // Wait for terms page
+    await page.locator('h1').filter({ hasText: /Terms of Service/i }).waitFor({ timeout: 5000 });
+    
+    // Check for key sections
+    const acceptanceSection = page.locator('h3').filter({ hasText: /1\. Acceptance of Terms/i });
+    await expect(acceptanceSection).toBeVisible();
+    
+    const licenseSection = page.locator('h3').filter({ hasText: /2\. Use License/i });
+    await expect(licenseSection).toBeVisible();
+  });
+});
