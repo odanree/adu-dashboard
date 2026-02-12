@@ -23,10 +23,6 @@ try:
 except:
     pass  # Not available in production container
 
-# Email whitelist - loaded from environment variable (try multiple names)
-WHITELISTED_EMAILS_STR = os.getenv('VITE_WHITELISTED_EMAILS') or os.getenv('WHITELISTED_EMAILS', '')
-ALLOWED_EMAILS = [email.strip().lower() for email in WHITELISTED_EMAILS_STR.split(',') if email.strip()]
-
 # Path to data file
 DATA_FILE = Path(__file__).parent / 'data.json'
 
@@ -51,8 +47,7 @@ class ADUHandler(SimpleHTTPRequestHandler):
                 'VITE_WHITELISTED_EMAILS': os.getenv('VITE_WHITELISTED_EMAILS', 'NOT SET'),
                 'WHITELISTED_EMAILS': os.getenv('WHITELISTED_EMAILS', 'NOT SET'),
                 'PORT': os.getenv('PORT', 'NOT SET'),
-                'RAILWAY_ENVIRONMENT': os.getenv('RAILWAY_ENVIRONMENT', 'NOT SET'),
-                'ALLOWED_EMAILS': ALLOWED_EMAILS
+                'RAILWAY_ENVIRONMENT': os.getenv('RAILWAY_ENVIRONMENT', 'NOT SET')
             }
             self.send_json_response(env_debug)
         elif self.path == '/api/data':

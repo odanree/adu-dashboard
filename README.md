@@ -52,6 +52,37 @@ npm run dev
 
 Then open: **http://localhost:5173**
 
+## 🔐 Email Whitelist Configuration
+
+The dashboard uses email-based authentication to control access to sensitive features.
+
+### How It Works
+
+- The whitelist is **loaded dynamically on every request** from the `WHITELISTED_EMAILS` environment variable
+- This ensures Railway env vars are always fresh (not stale from startup)
+- Users with whitelisted emails get access to the Data Manager and full budget details
+- Non-whitelisted users see a public view only
+
+### Local Development
+
+Add to `.env` file:
+```
+WHITELISTED_EMAILS=user1@example.com,user2@example.com
+```
+
+The `.env` file is loaded automatically by `python3 server.py` via `dotenv`.
+
+### Production (Railway)
+
+1. Go to your Railway project dashboard
+2. Click **Variables** 
+3. Add a new variable:
+   - **Name:** `WHITELISTED_EMAILS`
+   - **Value:** `email1@example.com,email2@example.com` (comma-separated, no spaces)
+4. Deploy - the whitelist is now active
+
+**Important:** The env var is read at **request time**, not at startup. This means Railway env vars are guaranteed to be available regardless of deployment timing.
+
 ## 📋 Root Organization
 
 This project follows **industry-standard conventions** for clean, professional structure:
