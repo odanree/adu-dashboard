@@ -11,6 +11,10 @@ import os
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import unquote
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Email whitelist - loaded from environment variable
 WHITELISTED_EMAILS_STR = os.getenv('VITE_WHITELISTED_EMAILS', '')
