@@ -6,6 +6,18 @@ on:
   pull_request:
     branches: [ main, master, develop ]
 
+# Path filters for selective job execution
+env:
+  FRONTEND_PATHS: |
+    src/**
+    tests/**
+    public/**
+    .github/**
+    package.json
+    tsconfig.json
+    vite.config.ts
+    vitest.config.ts
+
 jobs:
   lint-and-type-check:
     name: Lint & Type Check
@@ -62,6 +74,9 @@ jobs:
   e2e-tests:
     name: E2E Tests
     runs-on: ubuntu-latest
+    # Skip E2E only if changes are limited to non-critical config files
+    if: |
+      !contains(github.event.head_commit.message, '[skip e2e]')
     
     strategy:
       matrix:
