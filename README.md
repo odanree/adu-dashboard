@@ -18,6 +18,8 @@ A modern React + TypeScript dashboard for tracking ADU construction progress, ex
 - 🧾 Configurable expense items with dynamic details
 - 📈 Animated progress visualization
 - 🔐 Email-based authentication with whitelist
+  - Set `WHITELISTED_EMAILS` environment variable (comma-separated emails)
+  - Dynamically loaded on each request, never hardcoded
 - 🔒 **Whitelisted users see:**
   - Full budget including all configured phases
   - All project phases and line items

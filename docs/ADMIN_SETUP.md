@@ -32,9 +32,25 @@ The Admin Panel is a complete data management system for editing ADU budget and 
 ## Access Requirements
 
 ✅ **Must be signed in**  
-✅ **Email must be whitelisted** (configured in `.env` under `VITE_WHITELISTED_EMAILS`)  
+✅ **Email must be whitelisted** (set via `WHITELISTED_EMAILS` environment variable)  
 
 ⛔ Non-whitelisted users will NOT see the Data Manager button
+
+### Setting Up Whitelisted Emails
+
+**Local Development:**
+```bash
+# In your .env file
+WHITELISTED_EMAILS=user1@example.com,user2@example.com
+```
+
+**Production (Railway):**
+1. Go to Railway project dashboard
+2. Click "Variables"
+3. Add new variable:
+   - **Name:** `WHITELISTED_EMAILS`
+   - **Value:** `email1@example.com,email2@example.com` (comma-separated)
+4. Deploy - the whitelist is now active
 
 ## How to Use
 
