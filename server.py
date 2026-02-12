@@ -267,6 +267,7 @@ if __name__ == '__main__':
         print("   - GET /api/expenses-signoff → Expense sign-off status")
         print(f"   - POST /api/data → Save ADU data")
         print("\n🔄 Server is running and ready to accept requests...")
+        print("\n🔄 Server is running and ready to accept requests...")
         server.serve_forever()
     except OSError as e:
         print(f"❌ Failed to bind to {host}:{port}")
