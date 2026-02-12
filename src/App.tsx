@@ -179,13 +179,19 @@ export const App: React.FC = () => {
       {/* Footer */}
       <footer className="bg-black bg-opacity-50 text-white text-center py-2 mt-2">
         <p className="text-xs">
-          <a href="/privacy.html" className="hover:underline mr-2">
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'privacy' }))}
+            className="hover:underline mr-2 bg-none border-none cursor-pointer text-white"
+          >
             Privacy Policy
-          </a>
+          </button>
           •
-          <a href="/terms.html" className="hover:underline ml-2">
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'terms' }))}
+            className="hover:underline ml-2 bg-none border-none cursor-pointer text-white"
+          >
             Terms of Service
-          </a>
+          </button>
         </p>
         <p className="text-xs text-gray-400 mt-1">
           Last updated: {new Date(data.lastUpdated).toLocaleString()}

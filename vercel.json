@@ -2,8 +2,5 @@
   "buildCommand": "npm run build",
   "devCommand": "npm run dev",
   "outputDirectory": "dist",
-  "framework": "vite",
-  "env": [
-    "VITE_API_URL"
-  ]
+  "framework": "vite"
 }
