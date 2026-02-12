@@ -1,0 +1,174 @@
+a29bd35 - docs: Add version history and quick reference guides
+dfbe677 - docs: Update core documentation for v2.0
+827f1de - feat: Phase 4 - Dashboard UI Components
+5c88563 - feat: Phase 3 - Backend & Data Management
+d9f9c41 - feat: Phase 2 - Core Frontend Infrastructure
+15032a2 - chore: Phase 1 - Project Setup
+
+=============================================================================
+ADU DASHBOARD - GIT COMMIT HISTORY (v2.0 Development)
+=============================================================================
+
+LATEST COMMITS (Organized by Development Phase):
+
+Commit a29bd35: docs: Add version history and quick reference guides
+├─ CHANGELOG.md with v2.0 release documentation
+├─ QUICK_REFERENCE.md for quick lookup
+└─ .env.example template for developers
+
+Commit dfbe677: docs: Update core documentation for v2.0
+├─ README.md updated with all v2.0 features
+├─ PROJECT-OVERVIEW.md with current implementation status
+├─ DEVELOPMENT-SUMMARY.md with 6 development phases
+└─ ADMIN_SETUP.md with whitelist access documentation
+
+Commit 827f1de: feat: Phase 4 - Dashboard UI Components
+├─ Tailwind CSS configuration
+├─ PostCSS configuration
+├─ StatCard, ProgressBar, ExpenseBreakdown components
+└─ Responsive grid layouts (2-6 columns)
+
+Commit 5c88563: feat: Phase 3 - Backend & Data Management
+├─ Python HTTP server (localhost:8888)
+├─ GET/POST /api/data endpoints
+├─ JSON file persistence
+├─ Email whitelist verification
+└─ CORS headers for cross-origin requests
+
+Commit d9f9c41: feat: Phase 2 - Core Frontend Infrastructure
+├─ React 18 + TypeScript setup
+├─ Custom hooks (useAuth, useFetchADUData)
+├─ Utility functions (formatters, dates)
+├─ Type definitions for ADU data
+├─ Admin panel component
+├─ Router for page navigation
+└─ 28 source files with complete structure
+
+Commit 15032a2: chore: Phase 1 - Project Setup
+├─ Initialize React 18 + TypeScript + Vite
+├─ Configure Tailwind CSS and PostCSS
+├─ Set up ESLint for code quality
+└─ Add environment variables template
+
+=============================================================================
+DEVELOPMENT PHASES:
+=============================================================================
+
+✅ Phase 1: Project Setup (15032a2)
+   - Dependencies configured
+   - Build tools initialized
+
+✅ Phase 2: Core Infrastructure (d9f9c41)
+   - Frontend components built
+   - Data management hooks created
+   - Admin panel implemented
+
+✅ Phase 3: Backend Implementation (5c88563)
+   - Python API server
+   - Data persistence
+   - Email whitelist verification
+
+✅ Phase 4: UI Components (827f1de)
+   - Tailwind CSS styling
+   - Dashboard layout
+   - Responsive design
+
+✅ Phase 5: Admin Panel (included in Phase 2)
+   - Data editing interface
+   - Real-time calculations
+   - Save/reload functionality
+
+✅ Phase 6: OHP & Role-Based Access (in Phase 2 codebase)
+   - OHP phase ($11,124)
+   - Data filtering by whitelist
+   - Dynamic budget calculation
+
+✅ Phase 7: Bug Fixes & UI/UX (in Phase 2 codebase)
+   - Fixed "payment is not defined" error
+   - Fixed phase header alignment
+   - Compressed vertical spacing
+   - Vertically aligned prices
+
+✅ Phase 8: Documentation (dfbe677 + a29bd35)
+   - README.md updated
+   - PROJECT-OVERVIEW.md created
+   - DEVELOPMENT-SUMMARY.md created
+   - ADMIN_SETUP.md created
+   - CHANGELOG.md created
+   - QUICK_REFERENCE.md created
+
+=============================================================================
+FEATURES COMMITTED:
+=============================================================================
+
+✨ Frontend Features:
+- React 18 + TypeScript + Vite setup
+- Responsive grid layout (2-6 columns)
+- Dashboard with stat cards
+- Progress bar visualization
+- Expense breakdown by phase
+- Admin data management panel
+- Email-based authentication
+- Role-based access control
+
+✨ Backend Features:
+- Python HTTP server on localhost:8888
+- GET /api/data endpoint
+- POST /api/data endpoint
+- JSON file persistence
+- Email whitelist verification
+- CORS headers enabled
+- 7-phase expense data (6 construction + OHP)
+
+✨ Security Features:
+- Email whitelist verification
+- Role-based data filtering
+- Admin button hidden from non-whitelisted
+- OHP phase hidden from non-whitelisted
+- Dynamic budget based on user role
+
+✨ UI/UX Features:
+- Responsive mobile design
+- Compressed vertical spacing
+- Aligned phase prices
+- Professional styling
+- Smooth animations
+- Dark/light mode support
+
+=============================================================================
+BUDGET INFORMATION IN GIT:
+=============================================================================
+
+Non-Whitelisted Users (6 Phases):
+$214,076 total
+- Phase 1: Site Mobilization - $21,800
+- Phase 2: Foundation - $26,000
+- Phase 3: Rough MEP - $34,100
+- Phase 4: Framing - $28,000
+- Phase 5: Exterior - $59,000
+- Phase 6: Final Completion - $45,176
+
+Whitelisted Users (7 Phases):
+$225,200 total
+- [All 6 phases above]
+- Phase 7: OHP (Overhead & Profit) - $11,124
+
+=============================================================================
+HOW TO VIEW COMMITS:
+=============================================================================
+
+View all commits:
+$ git log
+
+View last 6 commits (development phases):
+$ git log --oneline | head -6
+
+View detailed commit info:
+$ git show <commit-hash>
+
+View diff between commits:
+$ git diff <commit1> <commit2>
+
+=============================================================================
+LAST UPDATED: February 11, 2026
+=============================================================================
