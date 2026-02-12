@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test</title>
+</head>
+<body>
+    <h1>Testing...</h1>
+    <div id="result"></div>
+    
+    <script>
+        console.log("Script loaded");
+        
+        const testData = {
+            payments: [{ num: 1, title: "Test", planned: 21800, actual: 21800 }],
+            expenses: [
+                { category: "Phase 1", phase: "1", task: "Test", cost: 21800 }
+            ]
+        };
+        
+        function renderTest(data) {
+            console.log("renderTest called");
+            const result = document.getElementById('result');
+            result.innerHTML = '<p>Data loaded: ' + data.expenses.length + ' expenses</p>';
+            console.log("renderTest complete");
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("DOMContentLoaded fired");
+            setTimeout(() => {
+                renderTest(testData);
+            }, 100);
+        });
+    </script>
+</body>
+</html>
