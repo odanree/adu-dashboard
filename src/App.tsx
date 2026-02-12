@@ -65,9 +65,10 @@ export const App: React.FC = () => {
   }
 
   // Filter expenses based on whitelist status - hide OHP from non-whitelisted users
+  const expenses = data.expenses || []
   const visibleExpenses = isWhitelisted 
-    ? data.expenses 
-    : data.expenses.filter((e: ExpenseCategory) => e.category !== 'OHP (Overhead & Profit)')
+    ? expenses
+    : expenses.filter((e: ExpenseCategory) => e.category !== 'OHP (Overhead & Profit)')
   
   // Calculate metrics - whitelisted users see full budget, others see project cost only
   const totalBudget = isWhitelisted ? 225200 : 214076
