@@ -30,13 +30,13 @@ declare global {
     google?: {
       accounts?: {
         id?: {
-          initialize: (config: any) => void
-          renderButton: (element: HTMLElement, config: any) => void
+          initialize: (config: Record<string, unknown>) => void
+          renderButton: (element: HTMLElement, config: Record<string, unknown>) => void
           revoke: (email?: string) => void
           onLoad?: (callback: () => void) => void
         }
         oauth2?: {
-          initTokenClient: (config: any) => any
+          initTokenClient: (config: Record<string, unknown>) => unknown
         }
       }
     }
