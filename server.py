@@ -230,8 +230,10 @@ class ADUHandler(SimpleHTTPRequestHandler):
             if DATA_FILE.exists():
                 with open(DATA_FILE, 'r') as f:
                     data = json.load(f)
-                    data['lastUpdated'] = datetime.now().isoformat()
-                    return data
+                    # Only use file data if it has expenses (valid data)
+                    if data.get('expenses') and len(data['expenses']) > 0:
+                        data['lastUpdated'] = datetime.now().isoformat()
+                        return data
         except Exception as e:
             print(f"Error loading data file: {e}")
         
