@@ -2,15 +2,33 @@
  * Router - Main entry point
  */
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import useAuth from '@hooks/useAuth'
 import App from './App'
 import Admin from './pages/Admin'
+import Privacy from './pages/Privacy'
+import Terms from './pages/Terms'
 import './styles/Router.css'
 
+type Page = 'dashboard' | 'admin' | 'privacy' | 'terms'
+
 export const Router: React.FC = () => {
-  const [currentPage, setCurrentPage] = useState<'dashboard' | 'admin'>('dashboard')
+  const [currentPage, setCurrentPage] = useState<Page>('dashboard')
   const { isWhitelisted } = useAuth()
+
+  useEffect(() => {
+    const handleNavigation = (event: Event) => {
+      const customEvent = event as CustomEvent
+      const page = customEvent.detail as Page
+      if (['dashboard', 'admin', 'privacy', 'terms'].includes(page)) {
+        setCurrentPage(page)
+        window.scrollTo(0, 0)
+      }
+    }
+
+    window.addEventListener('navigate', handleNavigation)
+    return () => window.removeEventListener('navigate', handleNavigation)
+  }, [])
 
   return (
     <>
@@ -44,6 +62,12 @@ export const Router: React.FC = () => {
             </button>
           </div>
         </>
+      )}
+      {currentPage === 'privacy' && (
+        <Privacy />
+      )}
+      {currentPage === 'terms' && (
+        <Terms />
       )}
     </>
   )

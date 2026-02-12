@@ -1,5 +1,12 @@
 {
-  "buildCommand": "echo 'No build needed'",
-  "devCommand": "python3 server.py",
-  "outputDirectory": "."
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "outputDirectory": "dist",
+  "framework": "vite",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }
