@@ -102,9 +102,9 @@ export const App: React.FC = () => {
       />
 
       {/* Main Content */}
-      <main className="container mx-auto px-3 py-4 max-w-6xl">
+      <main className="container mx-auto px-3 py-4 max-w-6xl" data-testid="main-content">
         {/* Stats Grid - 2 columns on small, 4 on larger */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-1 mb-1">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-1 mb-1" data-testid="stats-grid">
           <StatCard
             label="Total Budget"
             value={formatCurrency(totalBudget)}
@@ -128,12 +128,12 @@ export const App: React.FC = () => {
         </div>
 
         {/* Progress Section with Project Duration */}
-        <div className="bg-white rounded-lg shadow-lg p-3 mb-1">
+        <div className="bg-white rounded-lg shadow-lg p-3 mb-1" data-testid="progress-section">
           {/* Project Duration paired with Progress */}
           <div className="flex items-center justify-between mb-3">
             <div>
               <div className="text-xs text-gray-600">Project Duration</div>
-              <div className="text-lg font-bold text-primary-500">{projectDuration}</div>
+              <div data-testid="project-duration" className="text-lg font-bold text-primary-500">{projectDuration}</div>
             </div>
           </div>
           
@@ -142,7 +142,7 @@ export const App: React.FC = () => {
         </div>
 
         {/* Contractor's Expense Sign-Off Card */}
-        <div className="bg-white rounded-lg shadow-lg p-3 mb-1">
+        <div className="bg-white rounded-lg shadow-lg p-3 mb-1" data-testid="sign-off-section">
           <h3 className="text-lg font-bold mb-3 text-gray-900">🔐 Contractor's Expense Sign-Off</h3>
           {!isSignedIn ? (
             <p className="text-sm text-gray-600">Sign in to view expense sign-off progress</p>
@@ -155,7 +155,7 @@ export const App: React.FC = () => {
         </div>
 
         {/* Expense Breakdown */}
-        <div className="bg-white rounded-lg shadow-lg p-3 mb-1">
+        <div className="bg-white rounded-lg shadow-lg p-3 mb-1" data-testid="expense-section">
           <ExpenseBreakdown
             categories={visibleExpenses}
             isSignedIn={isSignedIn}

@@ -79,8 +79,8 @@ export const ExpenseBreakdown: React.FC<ExpenseBreakdownProps> = ({
   }
 
   return (
-    <div className="overflow-visible">
-      <h3 className="text-lg font-bold mb-3 text-gray-900">💰 Expense Breakdown by Phase</h3>
+    <div className="overflow-visible" data-testid="expense-breakdown">
+      <h3 data-testid="expense-breakdown-title" className="text-lg font-bold mb-3 text-gray-900">💰 Expense Breakdown by Phase</h3>
 
       {/* Mode Toggle Buttons */}
       <div className="flex gap-2 mb-3 flex-col md:flex-row relative z-40">
