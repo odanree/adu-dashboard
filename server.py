@@ -20,6 +20,9 @@ load_dotenv()
 WHITELISTED_EMAILS_STR = os.getenv('VITE_WHITELISTED_EMAILS', '')
 ALLOWED_EMAILS = [email.strip().lower() for email in WHITELISTED_EMAILS_STR.split(',') if email.strip()]
 
+if not ALLOWED_EMAILS:
+    print("WARNING: No whitelisted emails configured. Set VITE_WHITELISTED_EMAILS environment variable.")
+
 # Path to data file
 DATA_FILE = Path(__file__).parent / 'data.json'
 

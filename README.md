@@ -193,10 +193,10 @@ VITE_WHITELISTED_EMAILS=user1@example.com,user2@example.com
 - If health check fails: Ensure `/health` endpoint is responding (check server.py logs)
 
 Users with whitelisted emails see:
-- All 7 expense phases
-- Full $225,200 budget
+- All project expense phases
+- Full budget with all line items
 - Data Manager admin panel
-- OHP cost breakdown
+- Cost breakdown by phase
 
 ## 🛠️ Admin Panel
 
@@ -291,15 +291,15 @@ See [Deployment Guide](./docs/DEPLOYMENT.md) for detailed instructions on:
 
 ### Latest Updates (v2.0)
 
-- ✅ Added OHP (Overhead & Profit) phase for whitelisted users only
-- ✅ Updated total budget to $225,200 for whitelisted, $214,076 for others
+- ✅ Multi-phase expense tracking with dynamic budgets
+- ✅ Email-based whitelist for access control
 - ✅ Data Manager admin panel with full CRUD operations
 - ✅ Backend data persistence to JSON file
-- ✅ Compressed vertical spacing on Admin panel
-- ✅ Fixed phase header alignment (prices stay on one line)
-- ✅ Phase prices now align vertically in dashboard grid
-- ✅ Non-whitelisted users cannot see Data Manager button
-- ✅ Non-whitelisted users filtered from seeing OHP data
+- ✅ Role-based budget visibility (whitelisted vs. public)
+- ✅ Animated progress visualization
+- ✅ Backend API with Python server
+- ✅ Railway deployment with Docker
+- ✅ Generic example data as fallback (real data from backend)
 - ✅ Refactored root directory with industry standards
 - ✅ All documentation moved to `/docs` directory
 
