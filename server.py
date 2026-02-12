@@ -31,7 +31,10 @@ class ADUHandler(SimpleHTTPRequestHandler):
         self.wfile.write(json.dumps(data).encode())
     
     def do_GET(self):
-        if self.path == '/api/data':
+        if self.path == '/' or self.path == '/health':
+            # Health check endpoint for Railway
+            self.send_json_response({'status': 'ok', 'message': 'ADU Dashboard API is running'})
+        elif self.path == '/api/data':
             self.get_adu_data()
         elif self.path == '/api/refresh':
             self.refresh_data()
@@ -40,7 +43,11 @@ class ADUHandler(SimpleHTTPRequestHandler):
         elif self.path == '/api/expenses-signoff':
             self.get_expenses_signoff()
         else:
-            super().do_GET()
+            self.send_response(404)
+            self.send_header('Content-type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps({'error': 'Not found'}).encode())
     
     def do_POST(self):
         if self.path == '/api/data':
