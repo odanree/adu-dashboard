@@ -247,13 +247,23 @@ if __name__ == '__main__':
     os.chdir(Path(__file__).parent)
     # Use PORT env variable (Railway sets this), default to 8888 for local dev
     port = int(os.getenv('PORT', 8888))
-    host = '0.0.0.0' if os.getenv('RAILWAY_ENVIRONMENT') else 'localhost'
+    # Always bind to 0.0.0.0 in production (Railway, Render, etc.)
+    # Check for any common cloud environment variables
+    is_cloud = any([
+        os.getenv('RAILWAY_ENVIRONMENT'),
+        os.getenv('RAILWAY_STATIC_URL'),
+        os.getenv('PORT'),  # PORT being set usually means cloud deployment
+        os.getenv('RENDER'),
+        os.getenv('DYNO')  # Heroku
+    ])
+    host = '0.0.0.0' if is_cloud else 'localhost'
     
     print(f"🚀 Starting ADU Dashboard Server")
     print(f"   Host: {host}")
     print(f"   Port: {port}")
-    print(f"   Environment: {'Railway' if os.getenv('RAILWAY_ENVIRONMENT') else 'Local'}")
+    print(f"   Environment: {'Cloud' if is_cloud else 'Local'}")
     print(f"   Data file: {DATA_FILE}")
+    print(f"   Environment variables: PORT={os.getenv('PORT')}, RAILWAY_ENVIRONMENT={os.getenv('RAILWAY_ENVIRONMENT')}")
     
     try:
         server = HTTPServer((host, port), ADUHandler)
