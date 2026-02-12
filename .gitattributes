@@ -1,0 +1,10 @@
+# Exclude generated files and dependencies from language statistics
+tests/playwright-report/ linguist-vendored
+tests/test-results/ linguist-vendored
+node_modules/ linguist-vendored
+dist/ linguist-vendored
+out/ linguist-vendored
+.next/ linguist-vendored
+
+# Mark generated files as documentation
+*.html linguist-documentation
