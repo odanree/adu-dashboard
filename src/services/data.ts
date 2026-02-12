@@ -29,7 +29,7 @@ export const dataService = {
    */
   async fetchADUData(): Promise<ADUData> {
     try {
-      const response = await apiClient.get<ADUData>('/data')
+      const response = await apiClient.get<ADUData>('/api/data')
       return response.data
     } catch (error) {
       console.error('Error fetching ADU data:', error)
@@ -43,7 +43,7 @@ export const dataService = {
    */
   async refreshData(): Promise<ADUData> {
     try {
-      const response = await apiClient.get<ADUData>('/refresh')
+      const response = await apiClient.get<ADUData>('/api/refresh')
       return response.data
     } catch (error) {
       console.error('Error refreshing data:', error)
@@ -56,7 +56,7 @@ export const dataService = {
    */
   async getSheetsLink(email: string): Promise<{ authorized: boolean; url?: string; message?: string }> {
     try {
-      const response = await apiClient.get('/sheets-link', {
+      const response = await apiClient.get('/api/sheets-link', {
         params: { email },
       })
       console.log('getSheetsLink response:', response.data)
