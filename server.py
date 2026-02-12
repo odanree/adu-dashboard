@@ -241,12 +241,26 @@ if __name__ == '__main__':
     # Use PORT env variable (Railway sets this), default to 8888 for local dev
     port = int(os.getenv('PORT', 8888))
     host = '0.0.0.0' if os.getenv('RAILWAY_ENVIRONMENT') else 'localhost'
-    server = HTTPServer((host, port), ADUHandler)
-    print(f"🚀 ADU Dashboard running at http://{host}:{port}")
-    print("📊 API endpoints:")
-    print("   - GET /api/data → Latest ADU data")
-    print("   - GET /api/refresh → Force refresh")
+    
+    print(f"🚀 Starting ADU Dashboard Server")
+    print(f"   Host: {host}")
+    print(f"   Port: {port}")
+    print(f"   Environment: {'Railway' if os.getenv('RAILWAY_ENVIRONMENT') else 'Local'}")
+    print(f"   Data file: {DATA_FILE}")
+    
     try:
+        server = HTTPServer((host, port), ADUHandler)
+        print(f"✅ Server initialized at http://{host}:{port}")
+        print("📊 API endpoints:")
+        print("   - GET /api/data → Latest ADU data")
+        print("   - GET /api/refresh → Force refresh")
+        print("   - GET /api/sheets-link → Google Sheets link")
+        print("   - GET /api/expenses-signoff → Expense sign-off status")
+        print("\n🔄 Server is running...")
         server.serve_forever()
+    except OSError as e:
+        print(f"❌ Failed to bind to {host}:{port}")
+        print(f"   Error: {e}")
+        exit(1)
     except KeyboardInterrupt:
         print("\n✅ Server stopped")
