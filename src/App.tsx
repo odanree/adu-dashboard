@@ -160,7 +160,6 @@ export const App: React.FC = () => {
           <ExpenseBreakdown
             categories={visibleExpenses}
             isSignedIn={isSignedIn}
-            isWhitelisted={isWhitelisted}
             onModeChange={setExpenseViewMode}
             onSelectionChange={setSelectedPhases}
           />

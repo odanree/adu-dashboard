@@ -43,7 +43,7 @@ export const Header: React.FC<HeaderProps> = ({ isSignedIn, email, onSignOut, on
         window.google.accounts.id.initialize({
           client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || '1234567890.apps.googleusercontent.com',
           callback: (response: Record<string, unknown>) => {
-            if (response.credential) {
+            if (response.credential && typeof response.credential === 'string') {
               // Handle the JWT credential
               try {
                 const payload = JSON.parse(atob(response.credential.split('.')[1]))
