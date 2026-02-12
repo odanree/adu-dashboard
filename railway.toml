@@ -1,6 +1,5 @@
 [build]
 builder = "nixpacks"
-buildCommand = "echo 'No build needed for Python server'"
 
 [deploy]
 startCommand = "python3 server.py"
@@ -11,3 +10,12 @@ restartPolicyMaxRetries = 3
 
 [nixpacks]
 providers = ["python"]
+
+[phases.setup]
+nixPkgs = ["python311"]
+
+[phases.install]
+cmds = ["echo 'Skipping npm install'"]
+
+[phases.build]
+cmds = ["echo 'No build needed for Python server'"]
