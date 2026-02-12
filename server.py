@@ -23,9 +23,8 @@ try:
 except:
     pass  # Not available in production container
 
-# Email whitelist - hardcoded for production, can be overridden by env var
-DEFAULT_WHITELISTED_EMAILS = 'dtle82@gmail.com,johnnynguyen9299@yahoo.com'
-WHITELISTED_EMAILS_STR = os.getenv('VITE_WHITELISTED_EMAILS') or os.getenv('WHITELISTED_EMAILS') or DEFAULT_WHITELISTED_EMAILS
+# Email whitelist - loaded from environment variable (try multiple names)
+WHITELISTED_EMAILS_STR = os.getenv('VITE_WHITELISTED_EMAILS') or os.getenv('WHITELISTED_EMAILS', '')
 ALLOWED_EMAILS = [email.strip().lower() for email in WHITELISTED_EMAILS_STR.split(',') if email.strip()]
 
 # Path to data file
