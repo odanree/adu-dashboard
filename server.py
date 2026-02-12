@@ -8,10 +8,14 @@ from http.server import HTTPServer, SimpleHTTPRequestHandler
 import json
 import subprocess
 import os
+import sys
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import unquote
 from dotenv import load_dotenv
+
+# Ensure output is not buffered
+sys.stdout = sys.stderr
 
 # Load environment variables from .env file (for local dev only)
 try:
@@ -22,13 +26,6 @@ except:
 # Email whitelist - loaded from environment variable (try multiple names)
 WHITELISTED_EMAILS_STR = os.getenv('VITE_WHITELISTED_EMAILS') or os.getenv('WHITELISTED_EMAILS', '')
 ALLOWED_EMAILS = [email.strip().lower() for email in WHITELISTED_EMAILS_STR.split(',') if email.strip()]
-
-print(f"DEBUG: VITE_WHITELISTED_EMAILS = '{os.getenv('VITE_WHITELISTED_EMAILS', 'NOT SET')}'")
-print(f"DEBUG: WHITELISTED_EMAILS = '{os.getenv('WHITELISTED_EMAILS', 'NOT SET')}'")
-print(f"DEBUG: Final ALLOWED_EMAILS = {ALLOWED_EMAILS}")
-
-if not ALLOWED_EMAILS:
-    print("WARNING: No whitelisted emails configured. Set VITE_WHITELISTED_EMAILS environment variable.")
 
 # Path to data file
 DATA_FILE = Path(__file__).parent / 'data.json'
