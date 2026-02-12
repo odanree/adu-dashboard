@@ -16,12 +16,13 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
-# Email whitelist - loaded from environment variable
-WHITELISTED_EMAILS_STR = os.getenv('VITE_WHITELISTED_EMAILS', '')
+# Email whitelist - loaded from environment variable (try multiple names)
+WHITELISTED_EMAILS_STR = os.getenv('VITE_WHITELISTED_EMAILS') or os.getenv('WHITELISTED_EMAILS', '')
 ALLOWED_EMAILS = [email.strip().lower() for email in WHITELISTED_EMAILS_STR.split(',') if email.strip()]
 
-print(f"DEBUG: VITE_WHITELISTED_EMAILS = '{WHITELISTED_EMAILS_STR}'")
-print(f"DEBUG: ALLOWED_EMAILS = {ALLOWED_EMAILS}")
+print(f"DEBUG: VITE_WHITELISTED_EMAILS = '{os.getenv('VITE_WHITELISTED_EMAILS', 'NOT SET')}'")
+print(f"DEBUG: WHITELISTED_EMAILS = '{os.getenv('WHITELISTED_EMAILS', 'NOT SET')}'")
+print(f"DEBUG: Final ALLOWED_EMAILS = {ALLOWED_EMAILS}")
 
 if not ALLOWED_EMAILS:
     print("WARNING: No whitelisted emails configured. Set VITE_WHITELISTED_EMAILS environment variable.")
