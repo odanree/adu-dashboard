@@ -21,12 +21,18 @@ npm run dev
 
 ## 🔑 Whitelisted Emails
 
-Configured in `.env` file:
+**Local Development:**
+Set in `.env` file:
 ```
-VITE_WHITELISTED_EMAILS=user1@example.com,user2@example.com
+WHITELISTED_EMAILS=user1@example.com,user2@example.com
 ```
 
-**Note:** Actual emails are stored in `.env` and not committed to version control for security.
+**Production (Railway):**
+Set in Railway Variables dashboard:
+- Variable name: `WHITELISTED_EMAILS`
+- Value: `email1@example.com,email2@example.com` (comma-separated, no spaces)
+
+**Note:** Emails are loaded dynamically on each request from environment variables, never hardcoded in code.
 
 ## 💾 Phase Breakdown
 

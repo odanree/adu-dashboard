@@ -53,7 +53,7 @@ After deployment, configure these in Vercel Project Settings:
 2. Add:
    - `GOG_ACCOUNT` = Your Google account email (used for Sheets API access)
    - `SHEET_ID` = `1ZTX4H7qQPVZcU4TwoXcOVdbovHmRy3DZrcdfA3Qw2wk`
-   - `VITE_WHITELISTED_EMAILS` = Comma-separated list of whitelisted emails
+   - `WHITELISTED_EMAILS` = Comma-separated list of whitelisted emails (e.g., `user1@example.com,user2@example.com`)
 
 ## Step 4: First Launch
 
