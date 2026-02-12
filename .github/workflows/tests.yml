@@ -90,6 +90,9 @@ jobs:
       - name: Install Playwright browsers
         run: cd tests && npx playwright install --with-deps
       
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+      
       - name: Start backend server
         run: |
           python3 server.py > /tmp/backend.log 2>&1 &

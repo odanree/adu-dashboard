@@ -7,18 +7,18 @@ import type { ADUData, ExpenseCategory } from '@types'
 
 const FALLBACK_DATA: ADUData = {
   expenses: [
-    // Phase 1: Site Mobilization
-    { category: 'Phase 1: Site Mobilization', items: [{ task: 'Architect and Engineering', cost: 8000 }], total: 21800, phase: 1 },
+    // Phase 1: Planning & Design
+    { category: 'Phase 1: Planning & Design', items: [{ task: 'Permits', cost: 1500 }, { task: 'Design', cost: 2000 }], total: 3500, phase: 1 },
     // Phase 2: Foundation
-    { category: 'Phase 2: Foundation', items: [{ task: 'Footings', cost: 26000 }], total: 26000, phase: 2 },
-    // Phase 3: Rough MEP
-    { category: 'Phase 3: Rough MEP', items: [{ task: 'Plumbing, gas, and electrical', cost: 9500 }, { task: 'HVAC & Mechanical', cost: 7400 }, { task: 'Electrical', cost: 12000 }, { task: 'Plumbing', cost: 5200 }], total: 34100, phase: 3 },
-    // Phase 4: Framing
-    { category: 'Phase 4: Framing', items: [{ task: 'Framing', cost: 28000 }], total: 28000, phase: 4 },
+    { category: 'Phase 2: Foundation', items: [{ task: 'Excavation', cost: 3000 }, { task: 'Foundation', cost: 5000 }], total: 8000, phase: 2 },
+    // Phase 3: Framing
+    { category: 'Phase 3: Framing', items: [{ task: 'Structural Framing', cost: 8000 }], total: 8000, phase: 3 },
+    // Phase 4: MEP Systems
+    { category: 'Phase 4: MEP Systems', items: [{ task: 'Electrical', cost: 4000 }, { task: 'Plumbing', cost: 3000 }, { task: 'HVAC', cost: 3000 }], total: 10000, phase: 4 },
     // Phase 5: Exterior
-    { category: 'Phase 5: Exterior', items: [{ task: 'Roofing', cost: 17000 }, { task: 'Doors and Windows', cost: 11500 }, { task: 'Exterior Stucco', cost: 12000 }, { task: 'Exterior Stairs', cost: 3000 }, { task: 'Insulation', cost: 4000 }, { task: 'Drywall', cost: 11500 }], total: 59000, phase: 5 },
-    // Phase 6: Final Completion
-    { category: 'Phase 6: Final Completion', items: [{ task: 'Interior Painting', cost: 4400 }, { task: 'Flooring', cost: 6576 }, { task: 'ADU Kitchen', cost: 5500 }, { task: 'ADU Bathroom 1', cost: 9500 }, { task: 'Powder Room', cost: 5800 }, { task: 'Lighting', cost: 4500 }, { task: 'Baseboards', cost: 2700 }, { task: 'Door Trim', cost: 2600 }, { task: 'Paving', cost: 2500 }, { task: 'Deputy Inspection', cost: 1500 }], total: 45176, phase: 6 },
+    { category: 'Phase 5: Exterior', items: [{ task: 'Roofing', cost: 4000 }, { task: 'Siding', cost: 3000 }, { task: 'Windows & Doors', cost: 3000 }], total: 10000, phase: 5 },
+    // Phase 6: Interior Finishes
+    { category: 'Phase 6: Interior Finishes', items: [{ task: 'Drywall', cost: 2000 }, { task: 'Flooring', cost: 3000 }, { task: 'Painting', cost: 1500 }, { task: 'Fixtures', cost: 2500 }], total: 9000, phase: 6 },
   ],
   lastUpdated: new Date().toISOString(),
 }
