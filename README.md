@@ -149,6 +149,49 @@ Whitelisted emails are configured in `.env` file under `VITE_WHITELISTED_EMAILS`
 VITE_WHITELISTED_EMAILS=user1@example.com,user2@example.com
 ```
 
+## 🚀 Deployment
+
+### Frontend (Vercel)
+- Deployed automatically from `master` branch to https://adu-dashboard.vercel.app/
+- Only deploys from `master` (prevents rate limiting from `develop` branch)
+- Built with Vite + React 18
+
+### Backend (Railway)
+
+**Critical Setup for Railway:**
+
+1. **Docker Configuration:** Backend uses Dockerfile (not Nixpacks) to avoid building Node.js frontend
+   - Python 3.11 slim image
+   - Only copies `server.py`
+   - Creates empty `data.json` on build
+
+2. **Environment Variables** (set in Railway dashboard):
+   ```
+   PORT=8080                                          (CRITICAL - must match target port)
+   VITE_WHITELISTED_EMAILS=email1@example.com,email2@example.com
+   VITE_API_URL=https://adu-dashboard-production.up.railway.app  (for frontend)
+   VITE_GOOGLE_CLIENT_ID=<your-client-id>
+   ```
+
+3. **Networking Configuration** (Railway dashboard → Settings → Networking):
+   - **Target Port:** 8080 (must match PORT env variable)
+   - **Custom Domain:** adu-dashboard-production.up.railway.app
+
+4. **Health Check** (set in `railway.toml`):
+   - Path: `/health`
+   - Timeout: 300 seconds
+
+**Deployment Process:**
+1. Commit changes to `master` branch
+2. Railway auto-detects and rebuilds
+3. Verifies healthcheck at `/health` endpoint
+4. Routes traffic to port 8080
+
+**Troubleshooting:**
+- If getting 502 errors: Check that `PORT=8080` environment variable is set
+- If build fails: Verify Dockerfile is using Python-only (no npm)
+- If health check fails: Ensure `/health` endpoint is responding (check server.py logs)
+
 Users with whitelisted emails see:
 - All 7 expense phases
 - Full $225,200 budget
