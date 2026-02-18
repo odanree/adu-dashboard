@@ -23,7 +23,7 @@ const PROJECT_START_DATE = new Date('2025-10-08')
 const MILESTONE_DATA = [
   { title: 'Initial Deposit & Site Mobilization', date: '10/08/2025', icon: '🏗️' },
   { title: 'Foundation & Under-Slab Inspection', date: '11/06/2025', icon: '✅' },
-  { title: 'Rough MEP Inspection', date: 'TBD', icon: '🔧' },
+  { title: 'Rough MEP Inspection', date: '02/12/2025', icon: '🔧' },
   { title: 'Framing Inspection / Dry-In', date: 'TBD', icon: '🪵' },
   { title: 'Insulation & Drywall Inspections', date: 'TBD', icon: '🧱' },
   { title: 'Final Inspection & Project Completion', date: 'TBD', icon: '🎉' },
@@ -72,7 +72,7 @@ export const App: React.FC = () => {
   
   // Calculate metrics - whitelisted users see full budget, others see project cost only
   const totalBudget = isWhitelisted ? 225200 : 214076
-  const paidExpenses = visibleExpenses.filter((e: ExpenseCategory) => e.phase === 1 || e.phase === 2)
+  const paidExpenses = visibleExpenses.filter((e: ExpenseCategory) => e.phase === 1 || e.phase === 2 || e.phase === 3)
   const totalSpent = paidExpenses.reduce((sum: number, e: ExpenseCategory) => sum + e.total, 0)
   const remaining = totalBudget - totalSpent
   const progress = Math.round((totalSpent / totalBudget) * 100)
