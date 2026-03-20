@@ -10,6 +10,8 @@ build/
 .next/
 .env
 .env.local
+.env.production
+.env.staging
 .env.*.local
 .vite/
 .cache/
