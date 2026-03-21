@@ -25,6 +25,19 @@ jobs:
           source: "server.py,Dockerfile,requirements.txt"
           target: /opt/adu-dashboard/
 
+      - name: Write SA key to server
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          SA_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+        with:
+          host: ${{ secrets.HETZNER_HOST }}
+          username: root
+          key: ${{ secrets.HETZNER_SSH_KEY }}
+          envs: SA_JSON
+          script: |
+            mkdir -p /opt/adu-dashboard
+            printf '%s' "$SA_JSON" > /opt/adu-dashboard/.gcp-service-account.json
+
       - name: Build and restart container
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -40,9 +53,10 @@ jobs:
               --name adu-backend \
               --restart unless-stopped \
               -p 127.0.0.1:8888:8080 \
+              -e PORT=8080 \
               -e WHITELISTED_EMAILS="${{ secrets.WHITELISTED_EMAILS }}" \
               -e GOOGLE_SHEET_ID="${{ secrets.GOOGLE_SHEET_ID }}" \
-              -e GOOGLE_SERVICE_ACCOUNT_JSON="${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}" \
+              -v /opt/adu-dashboard/.gcp-service-account.json:/app/.gcp-service-account.json:ro \
               adu-backend
             sleep 3
             curl -sf http://localhost:8888/health && echo "✅ Deploy OK" || echo "❌ Health check failed"
