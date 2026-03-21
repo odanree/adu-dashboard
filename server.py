@@ -175,11 +175,45 @@ CANONICAL_EXPENSES = [
 
 
 def fetch_from_sheets() -> dict:
-    """Pull Payment Schedule from Google Sheets (expenses use canonical data)."""
+    """Pull Phase Canonical (expenses) and Payment Schedule from Google Sheets."""
     service = get_sheets_service()
     sheet = service.spreadsheets()
 
-    # --- Payment Schedule: milestone payments with completion dates ---
+    # --- Phase Canonical: A=phase#, B=category, C=task, D=cost ---
+    canonical_result = sheet.values().get(
+        spreadsheetId=SHEET_ID,
+        range="'Phase Canonical'!A1:D60"
+    ).execute()
+    canonical_rows = canonical_result.get('values', [])[1:]  # skip header
+
+    phases: dict = {}
+    phase_order: list = []
+    for row in canonical_rows:
+        if len(row) < 3:
+            continue
+        phase_num = row[0].strip()
+        category = row[1].strip()
+        task = row[2].strip()
+        cost = parse_currency(row[3]) if len(row) > 3 else 0.0
+
+        if not phase_num or not task:
+            continue
+        if phase_num not in phases:
+            phases[phase_num] = {'category': category, 'items': [], 'total': 0.0}
+            phase_order.append(phase_num)
+        phases[phase_num]['items'].append({'task': task, 'cost': cost})
+        phases[phase_num]['total'] += cost
+
+    expenses = []
+    for i, ph in enumerate(phase_order, 1):
+        expenses.append({
+            'category': phases[ph]['category'],
+            'items': phases[ph]['items'],
+            'total': round(phases[ph]['total'], 2),
+            'phase': i,
+        })
+
+    # --- Payment Schedule: A=num, B=title, C=planned, D=cumulative, E=actual, F=dateCompleted ---
     pay_result = sheet.values().get(
         spreadsheetId=SHEET_ID,
         range="'Payment Schedule'!A1:F10"
@@ -200,7 +234,7 @@ def fetch_from_sheets() -> dict:
         })
 
     return {
-        'expenses': CANONICAL_EXPENSES,
+        'expenses': expenses,
         'payments': payments,
         'lastUpdated': datetime.now().isoformat(),
         'source': 'google_sheets',
@@ -221,7 +255,7 @@ def get_cached_data() -> Optional[dict]:
 
 
 def fetch_adu_data() -> dict:
-    """Fetch payment schedule from Sheets; expenses always use canonical data."""
+    """Fetch from Phase Canonical + Payment Schedule sheets; fall back to hardcoded canonical on error."""
     try:
         data = fetch_from_sheets()
         # Persist to cache for offline fallback (payments only — expenses are canonical)
