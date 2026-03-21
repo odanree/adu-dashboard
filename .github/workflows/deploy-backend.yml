@@ -1,12 +1,14 @@
 name: Deploy Backend to Hetzner
 
 on:
+  workflow_dispatch:
   push:
     branches: [ master ]
     paths:
       - 'server.py'
       - 'Dockerfile'
       - 'requirements.txt'
+      - '.github/workflows/deploy-backend.yml'
 
 jobs:
   deploy:
