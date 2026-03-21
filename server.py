@@ -27,7 +27,7 @@ except Exception:
 # Config
 # ---------------------------------------------------------------------------
 
-SHEET_ID = '1ZTX4H7qQPVZcU4TwoXcOVdbovHmRy3DZrcdfA3Qw2wk'
+SHEET_ID = os.getenv('GOOGLE_SHEET_ID', '')
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 DATA_FILE = Path(__file__).parent / 'data.json'
 
@@ -58,6 +58,8 @@ def parse_currency(value) -> float:
 
 def get_sheets_service():
     """Build a Sheets API client from GOOGLE_SERVICE_ACCOUNT_JSON env var."""
+    if not SHEET_ID:
+        raise ValueError('GOOGLE_SHEET_ID environment variable not set')
     sa_json = os.getenv('GOOGLE_SERVICE_ACCOUNT_JSON')
     if not sa_json:
         raise ValueError('GOOGLE_SERVICE_ACCOUNT_JSON environment variable not set')
@@ -203,6 +205,7 @@ def debug_env():
     return {
         'WHITELISTED_EMAILS': os.getenv('VITE_WHITELISTED_EMAILS') or os.getenv('WHITELISTED_EMAILS', 'NOT SET'),
         'PORT': os.getenv('PORT', 'NOT SET'),
+        'GOOGLE_SHEET_ID': 'set' if os.getenv('GOOGLE_SHEET_ID') else 'NOT SET',
         'GOOGLE_SERVICE_ACCOUNT_JSON': f'set ({len(sa_json)} chars)' if sa_json else 'NOT SET',
     }
 

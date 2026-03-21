@@ -41,6 +41,7 @@ jobs:
               --restart unless-stopped \
               -p 127.0.0.1:8888:8080 \
               -e WHITELISTED_EMAILS="${{ secrets.WHITELISTED_EMAILS }}" \
+              -e GOOGLE_SHEET_ID="${{ secrets.GOOGLE_SHEET_ID }}" \
               -e GOOGLE_SERVICE_ACCOUNT_JSON="${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}" \
               adu-backend
             sleep 3
