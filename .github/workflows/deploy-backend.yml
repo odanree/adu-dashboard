@@ -1,0 +1,48 @@
+name: Deploy Backend to Hetzner
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - 'server.py'
+      - 'Dockerfile'
+      - 'requirements.txt'
+
+jobs:
+  deploy:
+    name: Deploy to Hetzner
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Copy files to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.HETZNER_HOST }}
+          username: root
+          key: ${{ secrets.HETZNER_SSH_KEY }}
+          source: "server.py,Dockerfile,requirements.txt"
+          target: /opt/adu-dashboard/
+
+      - name: Build and restart container
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HETZNER_HOST }}
+          username: root
+          key: ${{ secrets.HETZNER_SSH_KEY }}
+          script: |
+            cd /opt/adu-dashboard
+            docker build -t adu-backend .
+            docker stop adu-backend || true
+            docker rm adu-backend || true
+            docker run -d \
+              --name adu-backend \
+              --restart unless-stopped \
+              -p 127.0.0.1:8888:8080 \
+              -e WHITELISTED_EMAILS="${{ secrets.WHITELISTED_EMAILS }}" \
+              -e GOOGLE_SHEET_ID="${{ secrets.GOOGLE_SHEET_ID }}" \
+              -e GOOGLE_SERVICE_ACCOUNT_JSON="${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}" \
+              adu-backend
+            sleep 3
+            curl -sf http://localhost:8888/health && echo "✅ Deploy OK" || echo "❌ Health check failed"

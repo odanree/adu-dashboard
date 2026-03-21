@@ -22,3 +22,5 @@ coverage/
 .idea/
 .vscode/
 .env*.local
+.gcp-service-account.json
+data.json
