@@ -18,9 +18,14 @@ RUN echo '{}' > data.json
 
 # Set default whitelist (can be overridden by Railway variables)
 ENV WHITELISTED_EMAILS="dtle82@gmail.com,johnnynguyen9299@yahoo.com"
+ENV PORT=8080
 
-# Expose port (Railway will override with PORT env var)
+# Expose port
 EXPOSE 8080
+
+# Health check - restart container if /health stops responding
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')" || exit 1
 
 # Run the server
 CMD ["python3", "server.py"]

@@ -37,6 +37,17 @@ class ADUHandler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(json.dumps(data).encode())
     
+    def do_HEAD(self):
+        """Support HEAD requests (required for UptimeRobot free plan)"""
+        if self.path == '/' or self.path == '/health':
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+        else:
+            self.send_response(404)
+            self.end_headers()
+
     def do_GET(self):
         if self.path == '/' or self.path == '/health':
             # Health check endpoint for Railway
