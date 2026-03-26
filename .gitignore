@@ -24,3 +24,4 @@ coverage/
 .env*.local
 .gcp-service-account.json
 data.json
+docs/private/
