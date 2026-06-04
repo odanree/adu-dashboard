@@ -11,6 +11,7 @@ import { ProgressBar } from '@components/ProgressBar'
 import { StatCard } from '@components/StatCard'
 import { ExpenseBreakdown } from '@components/ExpenseBreakdown'
 import Header from '@components/Header'
+import PaymentSchedule from '@components/PaymentSchedule'
 import SignOffSection from '@components/SignOffSection'
 import SignOffStatus from '@components/SignOffStatus'
 import TestSignIn from '@components/TestSignIn'
@@ -142,6 +143,11 @@ export const App: React.FC = () => {
           {/* Progress Bar */}
           <ProgressBar progress={progress} milestones={milestones} />
         </div>
+
+        {/* Payment Schedule (whitelisted users only) */}
+        {isSignedIn && isWhitelisted && data.payments && (
+          <PaymentSchedule payments={data.payments} />
+        )}
 
         {/* Contractor's Expense Sign-Off Card */}
         <div className="bg-white rounded-lg shadow-lg p-3 mb-1" data-testid="sign-off-section">

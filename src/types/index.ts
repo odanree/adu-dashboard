@@ -6,7 +6,9 @@ export interface PaymentMilestone {
   num: number
   title: string
   planned: number
+  cumulative: number
   actual: number
+  dateCompleted: string
 }
 
 export interface ExpenseItem {
@@ -23,6 +25,7 @@ export interface ExpenseCategory {
 
 export interface ADUData {
   expenses: ExpenseCategory[]
+  payments?: PaymentMilestone[]
   lastUpdated: string
 }
 
