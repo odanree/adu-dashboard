@@ -19,7 +19,6 @@ declare global {
     readonly VITE_API_URL: string
     readonly VITE_GOOGLE_CLIENT_ID: string
     readonly VITE_ENV: string
-    readonly VITE_WHITELISTED_EMAILS: string
   }
 
   interface ImportMeta {

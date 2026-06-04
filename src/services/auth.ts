@@ -3,15 +3,10 @@
  */
 
 import type { AuthSession } from '@types'
+import apiClient from '@services/api'
 
 const SESSION_KEY = 'aduDashboardSession'
 const SESSION_EXPIRY_HOURS = 24
-
-// Whitelist of emails that see the full budget (with overhead/profit)
-// Loaded from environment variables
-const WHITELISTED_EMAILS = (
-  import.meta.env.VITE_WHITELISTED_EMAILS as string || ''
-).split(',').map((email: string) => email.trim().toLowerCase()).filter((email: string) => email.length > 0)
 
 export const authService = {
   /**
@@ -51,14 +46,22 @@ export const authService = {
   },
 
   /**
-   * Check if user email is whitelisted (sees full budget with overhead)
+   * Check if user email is whitelisted via backend (sees full budget with overhead).
+   * Backend env (WHITELISTED_EMAILS) is the single source of truth — Vercel doesn't
+   * need VITE_WHITELISTED_EMAILS set anymore. Fails closed if backend unreachable.
    */
-  isWhitelisted(): boolean {
-    const email = this.getCurrentEmail()
-    return email ? WHITELISTED_EMAILS.includes(email) : false
+  async checkWhitelist(email: string): Promise<boolean> {
+    try {
+      const response = await apiClient.get<{ whitelisted: boolean }>(
+        '/api/whitelist-check',
+        { params: { email } }
+      )
+      return response.data.whitelisted === true
+    } catch {
+      return false
+    }
   },
 
-  /**
   isSignedIn(): boolean {
     return this.getSession() !== null
   },

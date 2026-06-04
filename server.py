@@ -331,6 +331,14 @@ def sheets_link(email: str = ""):
     return {'authorized': False, 'message': 'Access denied. Only authorized users can access the expense sheet.'}
 
 
+@app.get("/api/whitelist-check")
+def whitelist_check(email: str = ""):
+    user_email = email.strip().lower()
+    whitelisted_str = os.getenv('VITE_WHITELISTED_EMAILS') or os.getenv('WHITELISTED_EMAILS', '')
+    allowed_emails = [e.strip().lower() for e in whitelisted_str.split(',') if e.strip()]
+    return {'email': user_email, 'whitelisted': user_email in allowed_emails}
+
+
 @app.get("/api/expenses-signoff")
 def expenses_signoff():
     return {
