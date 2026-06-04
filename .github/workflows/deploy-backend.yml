@@ -18,6 +18,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Validate required secrets are set
+        env:
+          WHITELISTED_EMAILS: ${{ secrets.WHITELISTED_EMAILS }}
+          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+          GF_SECURITY_ADMIN_PASSWORD: ${{ secrets.GF_SECURITY_ADMIN_PASSWORD }}
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          HETZNER_HOST: ${{ secrets.HETZNER_HOST }}
+          HETZNER_SSH_KEY: ${{ secrets.HETZNER_SSH_KEY }}
+        run: |
+          : "${WHITELISTED_EMAILS:?missing repo secret WHITELISTED_EMAILS}"
+          : "${GOOGLE_SHEET_ID:?missing repo secret GOOGLE_SHEET_ID}"
+          : "${GF_SECURITY_ADMIN_PASSWORD:?missing repo secret GF_SECURITY_ADMIN_PASSWORD}"
+          : "${GOOGLE_SERVICE_ACCOUNT_JSON:?missing repo secret GOOGLE_SERVICE_ACCOUNT_JSON}"
+          : "${HETZNER_HOST:?missing repo secret HETZNER_HOST}"
+          : "${HETZNER_SSH_KEY:?missing repo secret HETZNER_SSH_KEY}"
+          echo "✅ all required secrets present"
+
       - name: Copy files to server
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -27,7 +44,7 @@ jobs:
           source: "server.py,Dockerfile,requirements.txt,docker-compose.yml"
           target: /opt/adu-dashboard/
 
-      - name: Write secrets + .env to server
+      - name: Sync secrets into /opt/adu-dashboard/.env (merge, not overwrite)
         uses: appleboy/ssh-action@v1.0.3
         env:
           SA_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
@@ -44,12 +61,23 @@ jobs:
             mkdir -p /opt/adu-dashboard
             printf '%s' "$SA_JSON" > /opt/adu-dashboard/.gcp-service-account.json
             chmod 600 /opt/adu-dashboard/.gcp-service-account.json
-            cat > /opt/adu-dashboard/.env <<EOF
-            WHITELISTED_EMAILS=${WHITELISTED_EMAILS}
-            GOOGLE_SHEET_ID=${GOOGLE_SHEET_ID}
-            GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
-            EOF
-            chmod 600 /opt/adu-dashboard/.env
+
+            ENV_FILE=/opt/adu-dashboard/.env
+            touch "$ENV_FILE"
+            chmod 600 "$ENV_FILE"
+
+            # Merge one key without touching the rest of .env
+            update_key() {
+              local key="$1"; local value="$2"
+              local tmp="${ENV_FILE}.new"
+              grep -v "^${key}=" "$ENV_FILE" > "$tmp" 2>/dev/null || true
+              printf '%s=%s\n' "$key" "$value" >> "$tmp"
+              mv "$tmp" "$ENV_FILE"
+              chmod 600 "$ENV_FILE"
+            }
+            update_key WHITELISTED_EMAILS "$WHITELISTED_EMAILS"
+            update_key GOOGLE_SHEET_ID "$GOOGLE_SHEET_ID"
+            update_key GF_SECURITY_ADMIN_PASSWORD "$GF_SECURITY_ADMIN_PASSWORD"
 
       - name: Build and recreate adu-api via docker compose
         uses: appleboy/ssh-action@v1.0.3
@@ -76,7 +104,6 @@ jobs:
             fi
             echo "✅ Container recreated (was: ${OLD_ID:0:12}, now: ${NEW_ID:0:12})"
 
-            # Health + new-route smoke checks against the recreated container
             curl -sf http://127.0.0.1:8888/health > /dev/null \
               && echo "✅ /health OK" \
               || (echo "❌ /health failed"; docker compose logs --tail 50 adu-api; exit 1)
