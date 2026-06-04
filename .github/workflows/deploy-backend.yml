@@ -7,6 +7,8 @@ on:
       - 'server.py'
       - 'Dockerfile'
       - 'requirements.txt'
+      - 'docker-compose.yml'
+      - '.github/workflows/deploy-backend.yml'
 
 jobs:
   deploy:
@@ -22,41 +24,59 @@ jobs:
           host: ${{ secrets.HETZNER_HOST }}
           username: root
           key: ${{ secrets.HETZNER_SSH_KEY }}
-          source: "server.py,Dockerfile,requirements.txt"
+          source: "server.py,Dockerfile,requirements.txt,docker-compose.yml"
           target: /opt/adu-dashboard/
 
-      - name: Write SA key to server
+      - name: Write secrets + .env to server
         uses: appleboy/ssh-action@v1.0.3
         env:
           SA_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          WHITELISTED_EMAILS: ${{ secrets.WHITELISTED_EMAILS }}
+          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+          GF_SECURITY_ADMIN_PASSWORD: ${{ secrets.GF_SECURITY_ADMIN_PASSWORD }}
         with:
           host: ${{ secrets.HETZNER_HOST }}
           username: root
           key: ${{ secrets.HETZNER_SSH_KEY }}
-          envs: SA_JSON
+          envs: SA_JSON,WHITELISTED_EMAILS,GOOGLE_SHEET_ID,GF_SECURITY_ADMIN_PASSWORD
           script: |
+            set -euo pipefail
             mkdir -p /opt/adu-dashboard
             printf '%s' "$SA_JSON" > /opt/adu-dashboard/.gcp-service-account.json
+            chmod 600 /opt/adu-dashboard/.gcp-service-account.json
+            cat > /opt/adu-dashboard/.env <<EOF
+            WHITELISTED_EMAILS=${WHITELISTED_EMAILS}
+            GOOGLE_SHEET_ID=${GOOGLE_SHEET_ID}
+            GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
+            EOF
+            chmod 600 /opt/adu-dashboard/.env
 
-      - name: Build and restart container
+      - name: Build and recreate adu-api via docker compose
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.HETZNER_HOST }}
           username: root
           key: ${{ secrets.HETZNER_SSH_KEY }}
+          command_timeout: 30m
           script: |
+            set -euo pipefail
             cd /opt/adu-dashboard
-            docker build -t adu-backend .
-            docker stop adu-backend || true
-            docker rm adu-backend || true
-            docker run -d \
-              --name adu-backend \
-              --restart unless-stopped \
-              -p 127.0.0.1:8888:8080 \
-              -e PORT=8080 \
-              -e WHITELISTED_EMAILS="${{ secrets.WHITELISTED_EMAILS }}" \
-              -e GOOGLE_SHEET_ID="${{ secrets.GOOGLE_SHEET_ID }}" \
-              -v /opt/adu-dashboard/.gcp-service-account.json:/app/.gcp-service-account.json:ro \
-              adu-backend
-            sleep 3
-            curl -sf http://localhost:8888/health && echo "✅ Deploy OK" || echo "❌ Health check failed"
+
+            OLD_ID=$(docker inspect -f '{{.Id}}' adu-api 2>/dev/null || echo "none")
+
+            docker compose up -d --build --force-recreate adu-api
+
+            sleep 4
+            NEW_ID=$(docker inspect -f '{{.Id}}' adu-api)
+
+            if [ "$OLD_ID" = "$NEW_ID" ]; then
+              echo "❌ Container ID did not change — recreate failed"
+              docker compose logs --tail 50 adu-api
+              exit 1
+            fi
+            echo "✅ Container recreated (was: ${OLD_ID:0:12}, now: ${NEW_ID:0:12})"
+
+            # Health + new-route smoke checks against the recreated container
+            curl -sf http://127.0.0.1:8888/health > /dev/null \
+              && echo "✅ /health OK" \
+              || (echo "❌ /health failed"; docker compose logs --tail 50 adu-api; exit 1)
