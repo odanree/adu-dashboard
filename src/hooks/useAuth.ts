@@ -17,9 +17,9 @@ interface UseAuthReturn {
 export const useAuth = (): UseAuthReturn => {
   const [isSignedIn, setIsSignedIn] = useState(false)
   const [email, setEmail] = useState<string | null>(null)
+  const [isWhitelisted, setIsWhitelisted] = useState(false)
   const [loading, setLoading] = useState(true)
 
-  // Check initial sign-in state
   useEffect(() => {
     const session = authService.getSession()
     if (session) {
@@ -28,6 +28,20 @@ export const useAuth = (): UseAuthReturn => {
     }
     setLoading(false)
   }, [])
+
+  useEffect(() => {
+    if (!email) {
+      setIsWhitelisted(false)
+      return
+    }
+    let cancelled = false
+    authService.checkWhitelist(email).then(result => {
+      if (!cancelled) setIsWhitelisted(result)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [email])
 
   const handleSignIn = useCallback((credential: string) => {
     const success = authService.handleGoogleSignIn(credential)
@@ -42,12 +56,13 @@ export const useAuth = (): UseAuthReturn => {
     authService.signOut()
     setIsSignedIn(false)
     setEmail(null)
+    setIsWhitelisted(false)
   }, [])
 
   return {
     isSignedIn,
     email,
-    isWhitelisted: authService.isWhitelisted(),
+    isWhitelisted,
     signIn: handleSignIn,
     signOut: handleSignOut,
     loading,
