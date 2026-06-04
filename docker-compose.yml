@@ -72,4 +72,9 @@ volumes:
 
 networks:
   adu-net:
-    driver: bridge
+    # Shared with portfolio-caddy and any other services that need to reach
+    # adu-api by docker DNS. Treated as external so docker compose never
+    # tries to remove/recreate it (which would fail anyway — Caddy and
+    # Prometheus from other projects are attached).
+    external: true
+    name: adu-dashboard_adu-net
