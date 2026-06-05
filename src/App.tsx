@@ -74,8 +74,9 @@ export const App: React.FC = () => {
   
   // Calculate metrics - whitelisted users see full budget, others see project cost only
   const totalBudget = isWhitelisted ? 225200 : 214076
-  // Actual paid comes from the Payment Schedule (includes partial payments). Fall
-  // back to "sum of phases 1-5 budgeted" if payments aren't available.
+
+  // Amount Spent / Remaining = actual money paid, from the Payment Schedule.
+  // Falls back to "sum of phases 1-5 budgeted" if payments aren't available.
   const paymentTotals = data.payments && data.payments.length > 0
     ? computePaymentTotals(data.payments)
     : null
@@ -85,7 +86,27 @@ export const App: React.FC = () => {
         .filter((e: ExpenseCategory) => e.phase >= 1 && e.phase <= 5)
         .reduce((sum: number, e: ExpenseCategory) => sum + e.total, 0)
   const remaining = totalBudget - totalSpent
-  const progress = Math.round((totalSpent / totalBudget) * 100)
+
+  // Progress = construction completion, budget-weighted. A phase counts as
+  // complete when MILESTONE_DATA[idx].date is a real date (not 'TBD'). OHP is
+  // overhead/profit, not construction — excluded from both sides of the ratio.
+  // This is independent of payments; the Payment Schedule card tracks that.
+  const constructionExpenses = visibleExpenses.filter(
+    (e: ExpenseCategory) => e.category !== 'OHP (Overhead & Profit)'
+  )
+  const constructionTotal = constructionExpenses.reduce(
+    (sum: number, e: ExpenseCategory) => sum + e.total, 0
+  )
+  const completedConstruction = constructionExpenses.reduce(
+    (sum: number, e: ExpenseCategory, idx: number) => {
+      const date = MILESTONE_DATA[idx]?.date
+      return date && date !== 'TBD' ? sum + e.total : sum
+    },
+    0
+  )
+  const progress = constructionTotal > 0
+    ? Math.round((completedConstruction / constructionTotal) * 100)
+    : 0
   const projectDuration = calculateProjectDuration(PROJECT_START_DATE)
 
   // Create milestones for progress bar - use visible expense phases as milestones
