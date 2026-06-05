@@ -7,6 +7,7 @@ import useFetchADUData from '@hooks/useFetchADUData'
 import useAuth from '@hooks/useAuth'
 import { formatCurrency } from '@utils/formatters'
 import { calculateProjectDuration } from '@utils/dates'
+import { computePaymentTotals } from '@utils/payments'
 import { ProgressBar } from '@components/ProgressBar'
 import { StatCard } from '@components/StatCard'
 import { ExpenseBreakdown } from '@components/ExpenseBreakdown'
@@ -73,8 +74,16 @@ export const App: React.FC = () => {
   
   // Calculate metrics - whitelisted users see full budget, others see project cost only
   const totalBudget = isWhitelisted ? 225200 : 214076
-  const paidExpenses = visibleExpenses.filter((e: ExpenseCategory) => e.phase === 1 || e.phase === 2 || e.phase === 3 || e.phase === 4 || e.phase === 5)
-  const totalSpent = paidExpenses.reduce((sum: number, e: ExpenseCategory) => sum + e.total, 0)
+  // Actual paid comes from the Payment Schedule (includes partial payments). Fall
+  // back to "sum of phases 1-5 budgeted" if payments aren't available.
+  const paymentTotals = data.payments && data.payments.length > 0
+    ? computePaymentTotals(data.payments)
+    : null
+  const totalSpent = paymentTotals
+    ? paymentTotals.totalPaid
+    : visibleExpenses
+        .filter((e: ExpenseCategory) => e.phase >= 1 && e.phase <= 5)
+        .reduce((sum: number, e: ExpenseCategory) => sum + e.total, 0)
   const remaining = totalBudget - totalSpent
   const progress = Math.round((totalSpent / totalBudget) * 100)
   const projectDuration = calculateProjectDuration(PROJECT_START_DATE)

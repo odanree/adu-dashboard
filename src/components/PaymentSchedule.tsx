@@ -1,33 +1,10 @@
 import React, { useState } from 'react'
 import { formatCurrency } from '@utils/formatters'
+import { computePaymentTotals } from '@utils/payments'
 import type { PaymentMilestone } from '@types'
 
 interface PaymentScheduleProps {
   payments: PaymentMilestone[]
-}
-
-// Column E ("Actual") on the source sheet is *cumulative-actual-paid* for numbered
-// milestone rows, and *per-payment-actual* for ad-hoc rows (num=0). Total paid is
-// therefore: the highest cumulative actual from completed milestones, plus any
-// ad-hoc partial payments.
-const computeTotals = (payments: PaymentMilestone[]) => {
-  const completedMilestones = payments.filter(p => p.num > 0 && p.dateCompleted.trim() !== '')
-  const adHoc = payments.filter(p => p.num === 0 && p.actual > 0)
-
-  const milestonePaid = completedMilestones.reduce(
-    (max, p) => Math.max(max, p.actual),
-    0
-  )
-  const adHocPaid = adHoc.reduce((sum, p) => sum + p.actual, 0)
-  const totalPaid = milestonePaid + adHocPaid
-
-  const totalPlanned = payments
-    .filter(p => p.num > 0)
-    .reduce((max, p) => Math.max(max, p.cumulative), 0)
-
-  const percent = totalPlanned > 0 ? (totalPaid / totalPlanned) * 100 : 0
-
-  return { totalPaid, totalPlanned, percent }
 }
 
 export const PaymentSchedule: React.FC<PaymentScheduleProps> = ({ payments }) => {
@@ -35,7 +12,7 @@ export const PaymentSchedule: React.FC<PaymentScheduleProps> = ({ payments }) =>
 
   if (!payments || payments.length === 0) return null
 
-  const { totalPaid, totalPlanned, percent } = computeTotals(payments)
+  const { totalPaid, totalPlanned, percent } = computePaymentTotals(payments)
   const remaining = Math.max(totalPlanned - totalPaid, 0)
   const visibleRows = payments.filter(p => p.num > 0 || p.actual > 0)
 
