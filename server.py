@@ -29,7 +29,8 @@ except Exception:
 # ---------------------------------------------------------------------------
 
 SHEET_ID = os.getenv('GOOGLE_SHEET_ID', '')
-SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
+READ_SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
+WRITE_SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 DATA_FILE = Path(__file__).parent / 'data.json'
 
 app = FastAPI(title="ADU Dashboard API")
@@ -61,8 +62,10 @@ def parse_currency(value) -> float:
         return 0.0  # TBD / Excluded / empty
 
 
-def get_sheets_service():
+def get_sheets_service(write: bool = False):
     """Build a Sheets API client.
+
+    Pass write=True for endpoints that modify the sheet (e.g. POST /api/expenses).
 
     Credential resolution order:
     1. GOOGLE_SERVICE_ACCOUNT_JSON env var (production / CI)
@@ -72,10 +75,12 @@ def get_sheets_service():
     if not SHEET_ID:
         raise ValueError('GOOGLE_SHEET_ID environment variable not set')
 
+    scopes = WRITE_SCOPES if write else READ_SCOPES
+
     sa_json = os.getenv('GOOGLE_SERVICE_ACCOUNT_JSON')
     if sa_json:
         sa_info = json.loads(sa_json)
-        creds = service_account.Credentials.from_service_account_info(sa_info, scopes=SCOPES)
+        creds = service_account.Credentials.from_service_account_info(sa_info, scopes=scopes)
     else:
         key_file = (
             os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
@@ -86,9 +91,15 @@ def get_sheets_service():
                 'No Google credentials found. Set GOOGLE_SERVICE_ACCOUNT_JSON, '
                 'GOOGLE_APPLICATION_CREDENTIALS, or place key at .gcp-service-account.json'
             )
-        creds = service_account.Credentials.from_service_account_file(key_file, scopes=SCOPES)
+        creds = service_account.Credentials.from_service_account_file(key_file, scopes=scopes)
 
     return build('sheets', 'v4', credentials=creds)
+
+
+def is_whitelisted(email: str) -> bool:
+    whitelisted_str = os.getenv('VITE_WHITELISTED_EMAILS') or os.getenv('WHITELISTED_EMAILS', '')
+    allowed = [e.strip().lower() for e in whitelisted_str.split(',') if e.strip()]
+    return email.strip().lower() in allowed
 
 
 # ---------------------------------------------------------------------------
@@ -318,25 +329,74 @@ def refresh_data():
 
 @app.get("/api/sheets-link")
 def sheets_link(email: str = ""):
-    user_email = email.strip().lower()
-    whitelisted_str = os.getenv('VITE_WHITELISTED_EMAILS') or os.getenv('WHITELISTED_EMAILS', '')
-    allowed_emails = [e.strip().lower() for e in whitelisted_str.split(',') if e.strip()]
-
-    print(f"Extracted email: {user_email}")
-    print(f"Allowed emails: {allowed_emails}")
-    print(f"Email in whitelist: {user_email in allowed_emails}")
-
-    if user_email in allowed_emails:
+    if is_whitelisted(email):
         return {'authorized': True, 'url': 'https://docs.google.com/spreadsheets/d/1ZTX4H7qQPVZcU4TwoXcOVdbovHmRy3DZrcdfA3Qw2wk/edit?gid=361465694'}
     return {'authorized': False, 'message': 'Access denied. Only authorized users can access the expense sheet.'}
 
 
 @app.get("/api/whitelist-check")
 def whitelist_check(email: str = ""):
-    user_email = email.strip().lower()
-    whitelisted_str = os.getenv('VITE_WHITELISTED_EMAILS') or os.getenv('WHITELISTED_EMAILS', '')
-    allowed_emails = [e.strip().lower() for e in whitelisted_str.split(',') if e.strip()]
-    return {'email': user_email, 'whitelisted': user_email in allowed_emails}
+    return {'email': email.strip().lower(), 'whitelisted': is_whitelisted(email)}
+
+
+@app.post("/api/expenses")
+def add_expense_item(payload: dict):
+    """Append a new line item (change order) to the Phase Canonical sheet.
+
+    Body: { email, phase: int 1-7, task: str, cost: number }
+    Whitelist-gated; the email IS the auth — same trust model as the rest of
+    this dashboard's endpoints (personal-use single-tenant app).
+    """
+    email = (payload.get('email') or '').strip()
+    if not is_whitelisted(email):
+        return JSONResponse(status_code=403, content={'error': 'Not authorized'})
+
+    phase_num = payload.get('phase')
+    task = (payload.get('task') or '').strip()
+    cost = payload.get('cost')
+
+    if not isinstance(phase_num, int) or phase_num < 1 or phase_num > 7:
+        return JSONResponse(status_code=400, content={'error': 'phase must be an integer 1-7'})
+    if not task:
+        return JSONResponse(status_code=400, content={'error': 'task is required'})
+    try:
+        cost_float = float(cost)
+        if cost_float < 0:
+            raise ValueError()
+    except (TypeError, ValueError):
+        return JSONResponse(status_code=400, content={'error': 'cost must be a non-negative number'})
+
+    category = next(
+        (e['category'] for e in CANONICAL_EXPENSES if e['phase'] == phase_num),
+        f'Phase {phase_num}',
+    )
+
+    try:
+        service = get_sheets_service(write=True)
+        sheet = service.spreadsheets()
+        existing = sheet.values().get(
+            spreadsheetId=SHEET_ID,
+            range="'Phase Canonical'!A1:D60",
+        ).execute().get('values', [])
+        next_row = len(existing) + 1
+        if next_row > 60:
+            return JSONResponse(status_code=507, content={'error': 'Phase Canonical sheet is full (60 rows)'})
+
+        sheet.values().update(
+            spreadsheetId=SHEET_ID,
+            range=f"'Phase Canonical'!A{next_row}:D{next_row}",
+            valueInputOption='USER_ENTERED',
+            body={'values': [[str(phase_num), category, task, f'${cost_float:,.2f}']]},
+        ).execute()
+        print(f"✅ Change order added to row {next_row}: phase={phase_num} task='{task}' cost=${cost_float}")
+    except HttpError as e:
+        print(f"❌ Sheets write failed: {e}")
+        return JSONResponse(status_code=502, content={'error': f'Sheets write failed: {str(e)}'})
+    except Exception as e:
+        print(f"❌ Unexpected error: {e}")
+        return JSONResponse(status_code=500, content={'error': str(e)})
+
+    return {'success': True, 'message': 'Change order added', 'data': fetch_adu_data()}
 
 
 @app.get("/api/expenses-signoff")
