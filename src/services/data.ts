@@ -72,6 +72,28 @@ export const dataService = {
   },
 
   /**
+   * Append a change order (new line item) to the Phase Canonical sheet.
+   * Whitelist-gated server-side; the email IS the auth.
+   */
+  async addChangeOrder(params: {
+    email: string
+    phase: number
+    task: string
+    cost: number
+  }): Promise<{ success: boolean; data?: ADUData; error?: string }> {
+    try {
+      const response = await apiClient.post('/api/expenses', params)
+      if (response.data?.success) {
+        return { success: true, data: response.data.data as ADUData }
+      }
+      return { success: false, error: response.data?.error || 'Unknown error' }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Request failed'
+      return { success: false, error: message }
+    }
+  },
+
+  /**
    * Calculate total expenses
    */
   calculateTotalExpenses(expenses: ExpenseCategory[]): number {
