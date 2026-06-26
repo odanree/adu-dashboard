@@ -9,7 +9,8 @@
  * the Phase Canonical sheet directly.
  */
 
-import React, { useState } from 'react'
+import type React from 'react'
+import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import useAuth from '@hooks/useAuth'
 import { aduDataQueryKey } from '@hooks/useFetchADUData'
@@ -100,6 +101,7 @@ export const Admin: React.FC = () => {
           <h2 className="text-xl font-bold mb-2">Error</h2>
           <p className="text-gray-600 mb-4">{error || 'Could not load data'}</p>
           <button
+            type="button"
             onClick={() => query.refetch()}
             className="px-4 py-2 bg-primary-500 text-white rounded-lg"
           >
@@ -137,8 +139,11 @@ export const Admin: React.FC = () => {
           <h2 className="text-lg font-bold">Add a change order</h2>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Phase</label>
+            <label htmlFor="phase" className="block text-sm font-semibold text-gray-700 mb-1">
+              Phase
+            </label>
             <select
+              id="phase"
               value={phase}
               onChange={(e) => setPhase(Number(e.target.value))}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -153,8 +158,11 @@ export const Admin: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Description</label>
+            <label htmlFor="description" className="block text-sm font-semibold text-gray-700 mb-1">
+              Description
+            </label>
             <input
+              id="description"
               type="text"
               value={task}
               onChange={(e) => setTask(e.target.value)}
@@ -166,8 +174,11 @@ export const Admin: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Cost (USD)</label>
+            <label htmlFor="cost" className="block text-sm font-semibold text-gray-700 mb-1">
+              Cost (USD)
+            </label>
             <input
+              id="cost"
               type="number"
               step="0.01"
               min="0"
@@ -204,6 +215,7 @@ export const Admin: React.FC = () => {
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg font-bold">Current line items (read-only)</h2>
             <button
+              type="button"
               onClick={() => query.refetch()}
               className="text-sm text-primary-500 hover:underline"
               disabled={query.isFetching}
@@ -238,6 +250,7 @@ export const Admin: React.FC = () => {
 
         <div className="text-center">
           <button
+            type="button"
             onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'dashboard' }))}
             className="px-4 py-2 bg-white text-primary-500 font-semibold rounded-lg border-2 border-primary-500 hover:bg-primary-50 transition-colors text-sm"
           >

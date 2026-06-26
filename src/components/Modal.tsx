@@ -2,7 +2,8 @@
  * Modal component - generic modal for displaying details
  */
 
-import React, { useEffect } from 'react'
+import type React from 'react'
+import { useEffect } from 'react'
 
 interface ModalProps {
   isOpen: boolean
@@ -60,6 +61,7 @@ export const Modal: React.FC<ModalProps> = ({
         <div className="sticky top-0 flex items-center justify-between p-4 border-b-2 border-indigo-500 bg-white">
           <h2 className="text-lg font-bold text-gray-900">{title}</h2>
           <button
+            type="button"
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
             aria-label="Close modal"
@@ -69,7 +71,10 @@ export const Modal: React.FC<ModalProps> = ({
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
+              role="img"
+              aria-label="Close"
             >
+              <title>Close</title>
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"

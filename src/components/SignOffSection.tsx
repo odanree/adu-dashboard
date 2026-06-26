@@ -2,7 +2,7 @@
  * SignOffSection component - displays expense sign-off status
  */
 
-import React from 'react'
+import type React from 'react'
 import { useMutation } from '@tanstack/react-query'
 import dataService from '@services/data'
 
@@ -29,6 +29,7 @@ export const SignOffSection: React.FC<SignOffSectionProps> = ({ email }) => {
     <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded-lg mb-2">
       {error && <p className="text-red-600 mb-3">{error}</p>}
       <button
+        type="button"
         onClick={(e) => {
           e.preventDefault()
           sheetsLink.mutate(email)

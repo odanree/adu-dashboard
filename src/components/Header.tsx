@@ -2,7 +2,8 @@
  * Header component - navigation and branding
  */
 
-import React, { useState, useEffect } from 'react'
+import type React from 'react'
+import { useState, useEffect } from 'react'
 
 interface HeaderProps {
   isSignedIn: boolean
@@ -102,6 +103,7 @@ export const Header: React.FC<HeaderProps> = ({ isSignedIn, email, onSignOut, on
                 <div className="text-white font-semibold">{email}</div>
               </div>
               <button
+                type="button"
                 onClick={onSignOut}
                 className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-colors text-sm"
               >
@@ -114,6 +116,7 @@ export const Header: React.FC<HeaderProps> = ({ isSignedIn, email, onSignOut, on
               {/* Development test sign-in button */}
               {import.meta.env.VITE_ENV === 'development' && (
                 <button
+                  type="button"
                   onClick={onTestSignInClick}
                   className="w-full md:w-auto px-4 py-2 bg-white text-primary-600 font-semibold rounded-lg hover:bg-gray-100 transition-colors text-sm whitespace-nowrap"
                   title="Test different user roles"

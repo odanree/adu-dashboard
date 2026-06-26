@@ -3,7 +3,8 @@
  * Supports two modes: expand (view details) and cumulative (select multiple to add up)
  */
 
-import React, { useState } from 'react'
+import type React from 'react'
+import { useState } from 'react'
 import { formatCurrency } from '@utils/formatters'
 import type { ExpenseCategory, ExpenseItem } from '@types'
 import Modal from './Modal'
@@ -84,6 +85,7 @@ export const ExpenseBreakdown: React.FC<ExpenseBreakdownProps> = ({
       <div className="flex gap-2 mb-3 flex-col md:flex-row relative z-40">
         <div className="relative w-full md:w-auto group">
           <button
+            type="button"
             onClick={(e) => {
               if (!isSignedIn) {
                 showTooltipAtElement('expand', e)
@@ -104,6 +106,7 @@ export const ExpenseBreakdown: React.FC<ExpenseBreakdownProps> = ({
         </div>
         <div className="relative w-full md:w-auto group">
           <button
+            type="button"
             onClick={(e) => {
               if (!isSignedIn) {
                 showTooltipAtElement('cumulative', e)
@@ -168,7 +171,7 @@ export const ExpenseBreakdown: React.FC<ExpenseBreakdownProps> = ({
                   opacity: 1,
                 }}>
                   Must be signed in to use
-                  <div className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900" style={{transform: 'translateX(-50%) rotate(45deg)'}}></div>
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900" style={{transform: 'translateX(-50%) rotate(45deg)'}} />
                 </div>
               )}
               {/* Checkmark in cumulative mode */}
@@ -254,7 +257,7 @@ export const ExpenseBreakdown: React.FC<ExpenseBreakdownProps> = ({
           <div
             className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900"
             style={{ transform: 'translateX(-50%) rotate(45deg)' }}
-          ></div>
+          />
         </div>
       )}
     </div>
