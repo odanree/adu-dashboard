@@ -9,46 +9,51 @@
  * the Phase Canonical sheet directly.
  */
 
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import useAuth from '@hooks/useAuth'
+import { aduDataQueryKey } from '@hooks/useFetchADUData'
 import dataService from '@services/data'
 import { formatCurrency } from '@utils/formatters'
 import type { ADUData, ExpenseCategory } from '@types'
 
 export const Admin: React.FC = () => {
   const { email, isWhitelisted } = useAuth()
-  const [data, setData] = useState<ADUData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const queryClient = useQueryClient()
   const [phase, setPhase] = useState<number>(6)
   const [task, setTask] = useState('')
   const [cost, setCost] = useState('')
-  const [submitting, setSubmitting] = useState(false)
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
 
-  useEffect(() => {
-    void load()
-  }, [])
+  const query = useQuery({
+    queryKey: aduDataQueryKey,
+    queryFn: () => dataService.fetchADUData(),
+  })
+  const data = query.data ?? null
+  const loading = query.isLoading
+  const error = query.error instanceof Error ? query.error.message : null
 
-  const load = async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const result = await dataService.fetchADUData()
-      setData(result)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load data')
-    } finally {
-      setLoading(false)
-    }
-  }
+  const addChangeOrder = useMutation({
+    mutationFn: (input: { email: string; phase: number; task: string; cost: number }) =>
+      dataService.addChangeOrder(input),
+    onSuccess: (result, variables) => {
+      if (result.success) {
+        showToast('success', `Added "${variables.task}" to Phase ${variables.phase}`)
+        setTask('')
+        setCost('')
+        if (result.data) queryClient.setQueryData<ADUData>(aduDataQueryKey, result.data)
+      } else {
+        showToast('error', result.error || 'Failed to add change order')
+      }
+    },
+  })
 
   const showToast = (type: 'success' | 'error', message: string) => {
     setToast({ type, message })
     setTimeout(() => setToast(null), 4000)
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!email) {
       showToast('error', 'You must be signed in')
@@ -64,25 +69,10 @@ export const Admin: React.FC = () => {
       showToast('error', 'Cost must be a non-negative number')
       return
     }
-
-    setSubmitting(true)
-    const result = await dataService.addChangeOrder({
-      email,
-      phase,
-      task: trimmedTask,
-      cost: parsedCost,
-    })
-    setSubmitting(false)
-
-    if (result.success) {
-      showToast('success', `Added "${trimmedTask}" to Phase ${phase}`)
-      setTask('')
-      setCost('')
-      if (result.data) setData(result.data)
-    } else {
-      showToast('error', result.error || 'Failed to add change order')
-    }
+    addChangeOrder.mutate({ email, phase, task: trimmedTask, cost: parsedCost })
   }
+
+  const submitting = addChangeOrder.isPending
 
   if (!isWhitelisted) {
     return (
@@ -109,7 +99,10 @@ export const Admin: React.FC = () => {
         <div className="bg-white rounded-lg p-6 max-w-md text-center">
           <h2 className="text-xl font-bold mb-2">Error</h2>
           <p className="text-gray-600 mb-4">{error || 'Could not load data'}</p>
-          <button onClick={load} className="px-4 py-2 bg-primary-500 text-white rounded-lg">
+          <button
+            onClick={() => query.refetch()}
+            className="px-4 py-2 bg-primary-500 text-white rounded-lg"
+          >
             Retry
           </button>
         </div>
@@ -211,9 +204,9 @@ export const Admin: React.FC = () => {
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg font-bold">Current line items (read-only)</h2>
             <button
-              onClick={load}
+              onClick={() => query.refetch()}
               className="text-sm text-primary-500 hover:underline"
-              disabled={loading}
+              disabled={query.isFetching}
             >
               🔄 Refresh
             </button>
