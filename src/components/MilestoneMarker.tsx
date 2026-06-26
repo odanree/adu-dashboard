@@ -2,7 +2,8 @@
  * MilestoneMarker component - displays a single milestone on the progress bar
  */
 
-import React, { useState } from 'react'
+import type React from 'react'
+import { useState } from 'react'
 
 interface MilestoneMarkerProps {
   position: number

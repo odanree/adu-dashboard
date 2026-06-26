@@ -2,7 +2,8 @@
  * SignOffStatus component - displays contractor expense sign-off tracking
  */
 
-import React, { useEffect, useState } from 'react'
+import type React from 'react'
+import { useEffect, useState } from 'react'
 import { formatCurrency } from '@utils/formatters'
 import apiClient from '@services/api'
 
@@ -46,7 +47,7 @@ export const SignOffStatus: React.FC<SignOffStatusProps> = () => {
   if (loading) {
     return (
       <div className="bg-blue-50 border-l-4 border-blue-400 p-6 rounded-lg mb-8 animate-pulse">
-        <div className="h-4 bg-blue-200 rounded w-3/4"></div>
+        <div className="h-4 bg-blue-200 rounded w-3/4" />
       </div>
     )
   }

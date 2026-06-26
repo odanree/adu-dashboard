@@ -2,7 +2,8 @@
  * Router - Main entry point
  */
 
-import React, { useState, useEffect } from 'react'
+import type React from 'react'
+import { useState, useEffect } from 'react'
 import useAuth from '@hooks/useAuth'
 import App from './App'
 import Admin from './pages/Admin'

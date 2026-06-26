@@ -2,7 +2,7 @@
  * CumulativeSummary component - displays cumulative total as phases are selected
  */
 
-import React from 'react'
+import type React from 'react'
 import { formatCurrency } from '@utils/formatters'
 
 interface CumulativeSummaryProps {

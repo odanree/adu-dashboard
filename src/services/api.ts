@@ -2,7 +2,7 @@
  * API client configuration and setup
  */
 
-import axios, { AxiosInstance, AxiosError } from 'axios'
+import axios, { type AxiosInstance, type AxiosError } from 'axios'
 import type { APIError } from '@types'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL ?? ''
@@ -38,11 +38,11 @@ class APIClient {
   }
 
   setAuthToken(token: string): void {
-    this.client.defaults.headers.common['Authorization'] = `Bearer ${token}`
+    this.client.defaults.headers.common.Authorization = `Bearer ${token}`
   }
 
   clearAuthToken(): void {
-    delete this.client.defaults.headers.common['Authorization']
+    this.client.defaults.headers.common.Authorization = undefined
   }
 }
 

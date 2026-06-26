@@ -2,7 +2,7 @@
  * StatCard component - displays a single statistic
  */
 
-import React from 'react'
+import type React from 'react'
 
 interface StatCardProps {
   label: string
