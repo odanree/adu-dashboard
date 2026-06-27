@@ -6,8 +6,8 @@
  *
  * Field meanings:
  *   visibleExpenses    Expenses minus OHP for non-whitelisted users.
- *   totalBudget        Whitelisted users see full budget; others see
- *                      project-cost-only (OHP excluded).
+ *   totalBudget        Sum of visibleExpenses — naturally includes OHP for
+ *                      whitelisted users and excludes it for public users.
  *   totalSpent         Real money paid (from the Payment Schedule when
  *                      available). Falls back to "sum of phases 1-5
  *                      budgeted" when no payment data is present.
@@ -26,13 +26,6 @@ import { computePaymentTotals } from '@utils/payments'
 import type { ADUData, ExpenseCategory } from '@types'
 
 export const OHP_CATEGORY = 'OHP (Overhead & Profit)'
-// These must equal the live sheet:
-//   TOTAL_BUDGET_WHITELISTED = sum of ALL phase totals (incl. OHP)
-//   TOTAL_BUDGET_PUBLIC      = sum of phase totals EXCLUDING OHP
-// If the sheet's phase totals change, bump these. (TODO: derive from
-// data.expenses to remove this drift class entirely.)
-export const TOTAL_BUDGET_WHITELISTED = 225200
-export const TOTAL_BUDGET_PUBLIC = 214476
 
 interface MilestoneMarker {
   name: string
@@ -62,7 +55,11 @@ export const computeDashboardMetrics = (
     ? expenses
     : expenses.filter((e) => e.category !== OHP_CATEGORY)
 
-  const totalBudget = isWhitelisted ? TOTAL_BUDGET_WHITELISTED : TOTAL_BUDGET_PUBLIC
+  // Budget = sum of currently-visible expenses. For whitelisted users that's
+  // the full sheet (incl. OHP); for public users, OHP is already filtered out
+  // of visibleExpenses above. Deriving from the data eliminates the drift
+  // class where hardcoded budget constants and the live sheet could diverge.
+  const totalBudget = visibleExpenses.reduce((sum, e) => sum + e.total, 0)
 
   const paymentTotals =
     data.payments && data.payments.length > 0 ? computePaymentTotals(data.payments) : null

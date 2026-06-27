@@ -1,11 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import type { Milestone } from '@/constants/milestones'
-import {
-  OHP_CATEGORY,
-  TOTAL_BUDGET_PUBLIC,
-  TOTAL_BUDGET_WHITELISTED,
-  computeDashboardMetrics,
-} from '@hooks/useDashboardMetrics'
+import { OHP_CATEGORY, computeDashboardMetrics } from '@hooks/useDashboardMetrics'
 import type { ADUData, ExpenseCategory } from '@types'
 
 const category = (
@@ -33,10 +28,18 @@ const FIRST_TWO_COMPLETE: readonly Milestone[] = [
   { title: 'P6', date: 'TBD', icon: '🎉' },
 ]
 
+const SIX_PHASES_SUM = SIX_PHASES.reduce((sum, e) => sum + e.total, 0)
+const OHP_AMOUNT = 11124
+
 const data = (overrides: Partial<ADUData> = {}): ADUData => ({
   expenses: SIX_PHASES,
   lastUpdated: '2026-01-01T00:00:00Z',
   ...overrides,
+})
+
+const dataWithOhp = (): ADUData => ({
+  expenses: [...SIX_PHASES, category(OHP_CATEGORY, 7, OHP_AMOUNT)],
+  lastUpdated: '2026-01-01T00:00:00Z',
 })
 
 describe('computeDashboardMetrics', () => {
@@ -46,14 +49,19 @@ describe('computeDashboardMetrics', () => {
   })
 
   describe('totalBudget', () => {
-    test('whitelisted user sees full budget', () => {
-      const metrics = computeDashboardMetrics(data(), true, FIRST_TWO_COMPLETE)
-      expect(metrics?.totalBudget).toBe(TOTAL_BUDGET_WHITELISTED)
+    test('whitelisted user sees full sheet sum (incl OHP)', () => {
+      const metrics = computeDashboardMetrics(dataWithOhp(), true, FIRST_TWO_COMPLETE)
+      expect(metrics?.totalBudget).toBe(SIX_PHASES_SUM + OHP_AMOUNT)
     })
 
-    test('non-whitelisted user sees public budget', () => {
-      const metrics = computeDashboardMetrics(data(), false, FIRST_TWO_COMPLETE)
-      expect(metrics?.totalBudget).toBe(TOTAL_BUDGET_PUBLIC)
+    test('non-whitelisted user sees sheet sum excluding OHP', () => {
+      const metrics = computeDashboardMetrics(dataWithOhp(), false, FIRST_TWO_COMPLETE)
+      expect(metrics?.totalBudget).toBe(SIX_PHASES_SUM)
+    })
+
+    test('falls back to sum of visibleExpenses when no OHP in data', () => {
+      const metrics = computeDashboardMetrics(data(), true, FIRST_TWO_COMPLETE)
+      expect(metrics?.totalBudget).toBe(SIX_PHASES_SUM)
     })
   })
 
@@ -119,7 +127,9 @@ describe('computeDashboardMetrics', () => {
   describe('remaining', () => {
     test('equals totalBudget minus totalSpent', () => {
       const metrics = computeDashboardMetrics(data(), true, FIRST_TWO_COMPLETE)
-      expect(metrics?.remaining).toBe(TOTAL_BUDGET_WHITELISTED - 165900)
+      // SIX_PHASES has no OHP so totalBudget = sum of all 6 phases for both
+      // whitelist branches; spent fallback uses phases 1-5 = 165,900.
+      expect(metrics?.remaining).toBe(SIX_PHASES_SUM - 165900)
     })
   })
 
