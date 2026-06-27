@@ -31,8 +31,8 @@ export const parseCurrency = (value: string | number): number => {
     .replace(/[$,]/g, '')
     .trim()
   
-  const parsed = parseFloat(cleaned)
-  return isNaN(parsed) ? 0 : parsed
+  const parsed = Number.parseFloat(cleaned)
+  return Number.isNaN(parsed) ? 0 : parsed
 }
 
 export const calculateProgress = (actual: number, planned: number): number => {
@@ -47,5 +47,5 @@ export const calculatePercentage = (value: number, total: number): number => {
 
 export const truncateText = (text: string, maxLength: number): string => {
   if (text.length <= maxLength) return text
-  return text.slice(0, maxLength) + '...'
+  return `${text.slice(0, maxLength)}...`
 }

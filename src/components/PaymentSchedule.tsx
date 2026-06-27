@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import type React from 'react'
+import { useState } from 'react'
 import { formatCurrency } from '@utils/formatters'
 import { computePaymentTotals } from '@utils/payments'
 import type { PaymentMilestone } from '@types'
@@ -21,7 +22,8 @@ export const PaymentSchedule: React.FC<PaymentScheduleProps> = ({ payments }) =>
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-lg font-bold text-gray-900">💳 Payment Schedule</h3>
         <button
-          onClick={() => setExpanded(v => !v)}
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
           className="text-sm text-primary-500 hover:underline"
           aria-expanded={expanded}
         >

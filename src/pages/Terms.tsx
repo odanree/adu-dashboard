@@ -2,7 +2,7 @@
  * Terms of Service page
  */
 
-import React from 'react'
+import type React from 'react'
 
 export const Terms: React.FC = () => {
   const handleNavigate = (page: string) => {
@@ -15,6 +15,7 @@ export const Terms: React.FC = () => {
       <header className="bg-gradient-to-r from-primary-500 to-primary-700 text-white p-4">
         <div className="container mx-auto max-w-4xl">
           <button
+            type="button"
             onClick={() => handleNavigate('dashboard')}
             className="mb-4 text-sm hover:underline bg-none border-none cursor-pointer"
           >

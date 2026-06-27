@@ -2,7 +2,8 @@
  * ProgressBar component - displays project progress with milestone markers
  */
 
-import React, { useState, useEffect } from 'react'
+import type React from 'react'
+import { useState, useEffect } from 'react'
 
 interface Milestone {
   name: string

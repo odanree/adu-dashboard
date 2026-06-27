@@ -1,10 +1,17 @@
 /**
- * Custom hook for fetching and managing ADU data
+ * ADU data hook backed by TanStack Query.
+ *
+ * Preserves the original return shape ({ data, loading, error, refetch, refresh })
+ * so existing consumers keep working. `refetch` re-runs the cached query;
+ * `refresh` calls the server's /api/refresh endpoint, which forces a Sheets pull,
+ * then primes the cache with the result.
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import dataService from '@services/data'
 import type { ADUData } from '@types'
+
+export const aduDataQueryKey = ['adu-data'] as const
 
 interface UseFetchADUDataReturn {
   data: ADUData | null
@@ -15,49 +22,26 @@ interface UseFetchADUDataReturn {
 }
 
 export const useFetchADUData = (): UseFetchADUDataReturn => {
-  const [data, setData] = useState<ADUData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const queryClient = useQueryClient()
 
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const result = await dataService.fetchADUData()
-      setData(result)
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to fetch data'
-      setError(message)
-      console.error('Fetch error:', err)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+  const query = useQuery({
+    queryKey: aduDataQueryKey,
+    queryFn: () => dataService.fetchADUData(),
+  })
 
-  const refreshData = useCallback(async () => {
-    try {
-      setLoading(true)
-      const result = await dataService.refreshData()
-      setData(result)
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to refresh data'
-      setError(message)
-      console.error('Refresh error:', err)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
+  const refresh = async () => {
+    const fresh = await dataService.refreshData()
+    queryClient.setQueryData<ADUData>(aduDataQueryKey, fresh)
+  }
 
   return {
-    data,
-    loading,
-    error,
-    refetch: fetchData,
-    refresh: refreshData,
+    data: query.data ?? null,
+    loading: query.isLoading,
+    error: query.error instanceof Error ? query.error.message : null,
+    refetch: async () => {
+      await query.refetch()
+    },
+    refresh,
   }
 }
 

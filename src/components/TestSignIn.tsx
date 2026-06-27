@@ -3,7 +3,8 @@
  * For development/testing only
  */
 
-import React, { useState } from 'react'
+import type React from 'react'
+import { useState } from 'react'
 import authService from '@services/auth'
 
 interface TestSignInProps {
@@ -54,6 +55,7 @@ export const TestSignIn: React.FC<TestSignInProps> = ({ onSignIn, onClose }) => 
           <div className="space-y-2 mb-4">
             {(Object.keys(testUsers) as Array<'whitelisted' | 'public'>).map((userType) => (
               <button
+                type="button"
                 key={userType}
                 onClick={() => setSelectedUser(userType)}
                 className={`w-full p-3 rounded-lg border-2 transition-all text-left text-sm ${
@@ -79,12 +81,14 @@ export const TestSignIn: React.FC<TestSignInProps> = ({ onSignIn, onClose }) => 
           {/* Action Buttons */}
           <div className="flex gap-2">
             <button
+              type="button"
               onClick={onClose}
               className="flex-1 px-3 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-semibold text-sm"
             >
               Cancel
             </button>
             <button
+              type="button"
               onClick={handleSignIn}
               className="flex-1 px-3 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-semibold text-sm"
             >

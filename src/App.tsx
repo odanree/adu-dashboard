@@ -2,7 +2,8 @@
  * Main App component - orchestrates the dashboard layout
  */
 
-import React, { useState } from 'react'
+import type React from 'react'
+import { useState } from 'react'
 import useFetchADUData from '@hooks/useFetchADUData'
 import useAuth from '@hooks/useAuth'
 import { formatCurrency } from '@utils/formatters'
@@ -56,6 +57,7 @@ export const App: React.FC = () => {
           <h2 className="text-xl font-bold text-gray-900 mb-2">Unable to Load Data</h2>
           <p className="text-gray-600 mb-4">{error || 'An error occurred'}</p>
           <button
+            type="button"
             onClick={refresh}
             className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
           >
@@ -205,6 +207,7 @@ export const App: React.FC = () => {
         {/* Refresh Button */}
         <div className="flex justify-center mb-1">
           <button
+            type="button"
             onClick={refresh}
             className="px-4 py-2 bg-white text-primary-500 font-semibold rounded-lg border-2 border-primary-500 hover:bg-primary-50 transition-colors text-sm"
           >
@@ -217,6 +220,7 @@ export const App: React.FC = () => {
       <footer className="bg-black bg-opacity-50 text-white text-center py-2 mt-2">
         <p className="text-xs">
           <button
+            type="button"
             onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'privacy' }))}
             className="hover:underline mr-2 bg-none border-none cursor-pointer text-white"
           >
@@ -224,6 +228,7 @@ export const App: React.FC = () => {
           </button>
           •
           <button
+            type="button"
             onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'terms' }))}
             className="hover:underline ml-2 bg-none border-none cursor-pointer text-white"
           >
