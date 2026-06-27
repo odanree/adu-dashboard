@@ -26,8 +26,13 @@ import { computePaymentTotals } from '@utils/payments'
 import type { ADUData, ExpenseCategory } from '@types'
 
 export const OHP_CATEGORY = 'OHP (Overhead & Profit)'
+// These must equal the live sheet:
+//   TOTAL_BUDGET_WHITELISTED = sum of ALL phase totals (incl. OHP)
+//   TOTAL_BUDGET_PUBLIC      = sum of phase totals EXCLUDING OHP
+// If the sheet's phase totals change, bump these. (TODO: derive from
+// data.expenses to remove this drift class entirely.)
 export const TOTAL_BUDGET_WHITELISTED = 225200
-export const TOTAL_BUDGET_PUBLIC = 214076
+export const TOTAL_BUDGET_PUBLIC = 214476
 
 interface MilestoneMarker {
   name: string
