@@ -3,6 +3,8 @@
  * Tests whitelist authorization logic
  */
 
+import { describe, test, expect, beforeEach, vi } from 'vitest'
+
 // Mock handler function - In production, loads from VITE_WHITELISTED_EMAILS
 const ALLOWED_EMAILS = ['test@example.com', 'contractor@example.com'];
 const SHEETS_URL = 'https://docs.google.com/spreadsheets/d/1ZTX4H7qQPVZcU4TwoXcOVdbovHmRy3DZrcdfA3Qw2wk/edit?gid=361465694';
@@ -57,10 +59,10 @@ describe('sheets-link API', () => {
     };
 
     mockResponse = {
-      status: jest.fn().mockReturnThis(),
-      setHeader: jest.fn().mockReturnThis(),
-      json: jest.fn().mockReturnThis(),
-      end: jest.fn()
+      status: vi.fn().mockReturnThis(),
+      setHeader: vi.fn().mockReturnThis(),
+      json: vi.fn().mockReturnThis(),
+      end: vi.fn()
     };
   });
 
