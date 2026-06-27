@@ -1,14 +1,18 @@
 /**
- * Main App component - orchestrates the dashboard layout
+ * Main App component - orchestrates the dashboard layout.
+ *
+ * Responsibilities: fetch data, gate on auth, call the metrics hook,
+ * render. All derived numbers live in useDashboardMetrics — keep this
+ * file at orchestration altitude.
  */
 
 import type React from 'react'
 import { useState } from 'react'
 import useFetchADUData from '@hooks/useFetchADUData'
 import useAuth from '@hooks/useAuth'
+import useDashboardMetrics from '@hooks/useDashboardMetrics'
 import { formatCurrency } from '@utils/formatters'
 import { calculateProjectDuration } from '@utils/dates'
-import { computePaymentTotals } from '@utils/payments'
 import { ProgressBar } from '@components/ProgressBar'
 import { StatCard } from '@components/StatCard'
 import { ExpenseBreakdown } from '@components/ExpenseBreakdown'
@@ -17,13 +21,13 @@ import PaymentSchedule from '@components/PaymentSchedule'
 import SignOffSection from '@components/SignOffSection'
 import SignOffStatus from '@components/SignOffStatus'
 import TestSignIn from '@components/TestSignIn'
-import type { ExpenseCategory } from '@types'
-import { MILESTONE_DATA, PROJECT_START_DATE } from '@/constants/milestones'
+import { PROJECT_START_DATE } from '@/constants/milestones'
 import './App.css'
 
 export const App: React.FC = () => {
   const { data, loading, error, refresh } = useFetchADUData()
   const { isSignedIn, email, isWhitelisted, signOut } = useAuth()
+  const metrics = useDashboardMetrics(data, isWhitelisted)
   const [showTestSignIn, setShowTestSignIn] = useState(false)
   const [, setExpenseViewMode] = useState<'expand' | 'cumulative'>('expand')
   const [, setSelectedPhases] = useState<Set<string>>(new Set())
@@ -39,7 +43,7 @@ export const App: React.FC = () => {
     )
   }
 
-  if (!data) {
+  if (!data || !metrics) {
     return (
       <div className="min-h-screen bg-gradient-primary flex items-center justify-center">
         <div className="bg-white rounded-lg p-8 max-w-md text-center">
@@ -57,62 +61,8 @@ export const App: React.FC = () => {
     )
   }
 
-  // Filter expenses based on whitelist status - hide OHP from non-whitelisted users
-  const expenses = data.expenses || []
-  const visibleExpenses = isWhitelisted 
-    ? expenses
-    : expenses.filter((e: ExpenseCategory) => e.category !== 'OHP (Overhead & Profit)')
-  
-  // Calculate metrics - whitelisted users see full budget, others see project cost only
-  const totalBudget = isWhitelisted ? 225200 : 214076
-
-  // Amount Spent / Remaining = actual money paid, from the Payment Schedule.
-  // Falls back to "sum of phases 1-5 budgeted" if payments aren't available.
-  const paymentTotals = data.payments && data.payments.length > 0
-    ? computePaymentTotals(data.payments)
-    : null
-  const totalSpent = paymentTotals
-    ? paymentTotals.totalPaid
-    : visibleExpenses
-        .filter((e: ExpenseCategory) => e.phase >= 1 && e.phase <= 5)
-        .reduce((sum: number, e: ExpenseCategory) => sum + e.total, 0)
-  const remaining = totalBudget - totalSpent
-
-  // Progress = construction completion, budget-weighted. A phase counts as
-  // complete when MILESTONE_DATA[idx].date is a real date (not 'TBD'). OHP is
-  // overhead/profit, not construction — excluded from both sides of the ratio.
-  // This is independent of payments; the Payment Schedule card tracks that.
-  const constructionExpenses = visibleExpenses.filter(
-    (e: ExpenseCategory) => e.category !== 'OHP (Overhead & Profit)'
-  )
-  const constructionTotal = constructionExpenses.reduce(
-    (sum: number, e: ExpenseCategory) => sum + e.total, 0
-  )
-  const completedConstruction = constructionExpenses.reduce(
-    (sum: number, e: ExpenseCategory, idx: number) => {
-      const date = MILESTONE_DATA[idx]?.date
-      return date && date !== 'TBD' ? sum + e.total : sum
-    },
-    0
-  )
-  const progress = constructionTotal > 0
-    ? Math.round((completedConstruction / constructionTotal) * 100)
-    : 0
+  const { visibleExpenses, totalBudget, totalSpent, remaining, progress, milestones } = metrics
   const projectDuration = calculateProjectDuration(PROJECT_START_DATE)
-
-  // Create milestones for progress bar - use visible expense phases as milestones
-  const milestones = visibleExpenses.map((expense: ExpenseCategory, idx: number) => {
-    const cumulativePercent = visibleExpenses
-      .slice(0, idx + 1)
-      .reduce((sum: number, e: ExpenseCategory) => sum + e.total, 0) / totalBudget * 100
-    
-    return {
-      name: MILESTONE_DATA[idx]?.title || expense.category,
-      position: Math.min(cumulativePercent, 100), // Cumulative position capped at 100%
-      date: MILESTONE_DATA[idx]?.date || 'TBD',
-      icon: MILESTONE_DATA[idx]?.icon || '📍',
-    }
-  })
 
   return (
     <>
@@ -160,7 +110,7 @@ export const App: React.FC = () => {
               <div data-testid="project-duration" className="text-lg font-bold text-primary-500">{projectDuration}</div>
             </div>
           </div>
-          
+
           {/* Progress Bar */}
           <ProgressBar progress={progress} milestones={milestones} />
         </div>

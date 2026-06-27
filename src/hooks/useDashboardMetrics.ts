@@ -47,10 +47,11 @@ export interface DashboardMetrics {
 }
 
 export const useDashboardMetrics = (
-  data: ADUData,
+  data: ADUData | null | undefined,
   isWhitelisted: boolean,
-): DashboardMetrics =>
+): DashboardMetrics | null =>
   useMemo(() => {
+    if (!data) return null
     const expenses = data.expenses ?? []
     const visibleExpenses = isWhitelisted
       ? expenses
