@@ -18,7 +18,10 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'http://localhost:8080',
+        // 127.0.0.1, not localhost: on Windows, `localhost` resolves to
+        // ::1 (IPv6) first, but the dev backend (uvicorn server.py) binds
+        // to IPv4 by default, causing 404s through the proxy.
+        target: 'http://127.0.0.1:8080',
         changeOrigin: true,
       },
     },
