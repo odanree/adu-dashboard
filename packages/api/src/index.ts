@@ -25,7 +25,8 @@ import { resolve } from 'node:path'
 // Load .env from repo root (two levels up from packages/api/src/)
 loadDotenv({ path: resolve(import.meta.dirname, '..', '..', '..', '.env') })
 
-import { fetchFromSheets } from './sheets.js'
+import { appendExpenseRow, fetchFromSheets } from './sheets.js'
+import { categoryFor } from './phase-categories.js'
 import { isWhitelisted, sheetsLinkResponse } from './whitelist.js'
 
 const app = new Hono()
@@ -102,6 +103,58 @@ app.get('/api/whitelist-check', (c) => {
 app.get('/api/sheets-link', (c) => {
   const email = c.req.query('email') ?? ''
   return c.json(sheetsLinkResponse(email))
+})
+
+// POST /api/expenses — append a change-order row to the Phase Canonical
+// sheet. Whitelist-gated; the email IS the auth (matches Python's
+// single-tenant trust model). Validation messages, status codes, and
+// success payload exactly match server.py:add_expense_item.
+app.post('/api/expenses', async (c) => {
+  type Body = { email?: unknown; phase?: unknown; task?: unknown; cost?: unknown }
+  let body: Body
+  try {
+    body = await c.req.json<Body>()
+  } catch {
+    return c.json({ error: 'Invalid JSON body' }, 400)
+  }
+
+  const email = typeof body.email === 'string' ? body.email.trim() : ''
+  if (!isWhitelisted(email)) return c.json({ error: 'Not authorized' }, 403)
+
+  const phase = body.phase
+  if (typeof phase !== 'number' || !Number.isInteger(phase) || phase < 1 || phase > 7) {
+    return c.json({ error: 'phase must be an integer 1-7' }, 400)
+  }
+
+  const task = typeof body.task === 'string' ? body.task.trim() : ''
+  if (!task) return c.json({ error: 'task is required' }, 400)
+
+  const costRaw = body.cost
+  const cost = typeof costRaw === 'number' ? costRaw : Number(costRaw)
+  if (!Number.isFinite(cost) || cost < 0) {
+    return c.json({ error: 'cost must be a non-negative number' }, 400)
+  }
+
+  const result = await appendExpenseRow(phase, categoryFor(phase), task, cost)
+  if (!result.ok && result.kind === 'sheet_full') {
+    return c.json({ error: 'Phase Canonical sheet is full (60 rows)' }, 507)
+  }
+  if (!result.ok) {
+    console.error('Sheets write failed:', result.error)
+    return c.json({ error: `Sheets write failed: ${result.error.message}` }, 502)
+  }
+
+  console.log(`✅ Change order added to row ${result.row}: phase=${phase} task='${task}' cost=$${cost}`)
+
+  // Match Python: returns refreshed data so the UI can re-render without
+  // a follow-up fetch. If the refetch itself fails, surface as 500.
+  try {
+    const data = await fetchFromSheets()
+    return c.json({ success: true, message: 'Change order added', data })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    return c.json({ error: message }, 500)
+  }
 })
 
 const port = Number.parseInt(process.env.PORT ?? '8081', 10)
