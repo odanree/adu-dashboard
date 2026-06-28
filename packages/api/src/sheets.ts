@@ -13,6 +13,7 @@ import { google } from 'googleapis'
 import type { ADUData, ExpenseCategory, PaymentMilestone } from './types.js'
 
 const READ_SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
+const WRITE_SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 
 /** Convert '$1,234.56' / 'TBD' / 'Excluded' / empty to a float. */
 const parseCurrency = (value: unknown): number => {
@@ -25,15 +26,66 @@ const parseCurrency = (value: unknown): number => {
   return Number.isFinite(n) ? n : 0
 }
 
-const getSheetsClient = () => {
+const getSheetsClient = (opts: { write?: boolean } = {}) => {
   const sheetId = process.env.GOOGLE_SHEET_ID
   const credentialsJson = process.env.GOOGLE_SERVICE_ACCOUNT_JSON
   if (!sheetId) throw new Error('GOOGLE_SHEET_ID not set')
   if (!credentialsJson) throw new Error('GOOGLE_SERVICE_ACCOUNT_JSON not set')
 
   const credentials = JSON.parse(credentialsJson)
-  const auth = new google.auth.GoogleAuth({ credentials, scopes: READ_SCOPES })
+  const scopes = opts.write ? WRITE_SCOPES : READ_SCOPES
+  const auth = new google.auth.GoogleAuth({ credentials, scopes })
   return { sheets: google.sheets({ version: 'v4', auth }), sheetId }
+}
+
+/**
+ * Mirrors server.py:add_expense_item write path exactly:
+ *   1. Read existing rows in Phase Canonical to compute next-row index.
+ *   2. Bail with `sheet_full` if next row would exceed 60.
+ *   3. Update A{n}:D{n} with [phase, category, task, '$cost']. Uses
+ *      USER_ENTERED so the sheet UI sees real currency values.
+ *
+ * Returns the row number written, or one of two failure modes:
+ *   - 'sheet_full' (HTTP 507 equivalent)
+ *   - { error: Error } for any Sheets API error (HTTP 502 equivalent)
+ */
+export type AppendExpenseRow =
+  | { ok: true; row: number }
+  | { ok: false; kind: 'sheet_full' }
+  | { ok: false; kind: 'api_error'; error: Error }
+
+export const appendExpenseRow = async (
+  phase: number,
+  category: string,
+  task: string,
+  cost: number,
+): Promise<AppendExpenseRow> => {
+  const { sheets, sheetId } = getSheetsClient({ write: true })
+
+  try {
+    const existing = await sheets.spreadsheets.values.get({
+      spreadsheetId: sheetId,
+      range: "'Phase Canonical'!A1:D60",
+    })
+    const nextRow = (existing.data.values?.length ?? 0) + 1
+    if (nextRow > 60) return { ok: false, kind: 'sheet_full' }
+
+    // Match Python's f'${cost:,.2f}' — comma thousands separator + 2 decimals.
+    const costFormatted = `$${cost.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`
+
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: sheetId,
+      range: `'Phase Canonical'!A${nextRow}:D${nextRow}`,
+      valueInputOption: 'USER_ENTERED',
+      requestBody: { values: [[String(phase), category, task, costFormatted]] },
+    })
+    return { ok: true, row: nextRow }
+  } catch (err) {
+    return { ok: false, kind: 'api_error', error: err instanceof Error ? err : new Error(String(err)) }
+  }
 }
 
 export const fetchFromSheets = async (): Promise<ADUData> => {
