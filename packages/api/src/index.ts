@@ -33,8 +33,44 @@ const app = new Hono()
 app.use('*', logger())
 app.use('/api/*', cors({ origin: '*' }))
 
-app.get('/', (c) => c.text('@adu-dashboard/api — TS port of server.py'))
-app.get('/health', (c) => c.json({ ok: true }))
+// Health: matches server.py — same body, same Cache-Control, both GET and HEAD
+// (the Hetzner / Caddy healthcheck issues HEAD against /).
+const healthHandler = (c: import('hono').Context) => {
+  c.header('Cache-Control', 'no-store')
+  return c.json({ status: 'ok', message: 'ADU Dashboard API is running' })
+}
+app.on(['GET', 'HEAD'], ['/', '/health'], healthHandler)
+
+app.get('/debug/env', (c) => {
+  const sa = process.env.GOOGLE_SERVICE_ACCOUNT_JSON ?? ''
+  return c.json({
+    WHITELISTED_EMAILS:
+      process.env.VITE_WHITELISTED_EMAILS ?? process.env.WHITELISTED_EMAILS ?? 'NOT SET',
+    PORT: process.env.PORT ?? 'NOT SET',
+    GOOGLE_SHEET_ID: process.env.GOOGLE_SHEET_ID ? 'set' : 'NOT SET',
+    GOOGLE_SERVICE_ACCOUNT_JSON: sa ? `set (${sa.length} chars)` : 'NOT SET',
+  })
+})
+
+// Stub matching server.py — values are hardcoded on the Python side too.
+// If/when the UI needs real per-row sign-off tracking, that's a separate
+// feature on top of the canonical sheet, not a parity item.
+app.get('/api/expenses-signoff', (c) =>
+  c.json({
+    success: true,
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    signOff: {
+      totalAmount: '$9,494.51',
+      signedOffAmount: '$0.00',
+      pendingAmount: '$9,494.51',
+      signedOffCount: 0,
+      pendingCount: 7,
+      totalCount: 7,
+      percentComplete: 0,
+    },
+  }),
+)
 
 const handleData = async () => {
   try {
