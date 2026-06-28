@@ -48,7 +48,6 @@ export const fetchFromSheets = async (): Promise<ADUData> => {
 
   type PhaseAcc = { category: string; items: { task: string; cost: number }[]; total: number }
   const phases = new Map<string, PhaseAcc>()
-  const phaseOrder: string[] = []
 
   for (const row of canonicalRows) {
     if (row.length < 3) continue
@@ -58,24 +57,22 @@ export const fetchFromSheets = async (): Promise<ADUData> => {
     const cost = row.length > 3 ? parseCurrency(row[3]) : 0
 
     if (!phaseNum || !task) continue
-    if (!phases.has(phaseNum)) {
-      phases.set(phaseNum, { category, items: [], total: 0 })
-      phaseOrder.push(phaseNum)
+    let phase = phases.get(phaseNum)
+    if (!phase) {
+      phase = { category, items: [], total: 0 }
+      phases.set(phaseNum, phase)
     }
-    const phase = phases.get(phaseNum)!
     phase.items.push({ task, cost })
     phase.total += cost
   }
 
-  const expenses: ExpenseCategory[] = phaseOrder.map((ph, i) => {
-    const p = phases.get(ph)!
-    return {
-      category: p.category,
-      items: p.items,
-      total: Math.round(p.total * 100) / 100,
-      phase: i + 1,
-    }
-  })
+  // Map preserves insertion order, which matches Python's phase_order list.
+  const expenses: ExpenseCategory[] = Array.from(phases.values(), (p, i) => ({
+    category: p.category,
+    items: p.items,
+    total: Math.round(p.total * 100) / 100,
+    phase: i + 1,
+  }))
 
   // --- Payment Schedule ---
   const payResult = await sheets.spreadsheets.values.get({
