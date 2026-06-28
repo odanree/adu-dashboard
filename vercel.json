@@ -1,7 +1,7 @@
 {
   "buildCommand": "npm run build",
   "devCommand": "npm run dev",
-  "outputDirectory": "dist",
+  "outputDirectory": "packages/ui/dist",
   "framework": "vite",
   "rewrites": [
     {

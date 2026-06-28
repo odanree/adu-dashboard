@@ -1,12 +1,13 @@
 import { defineConfig } from 'vitest/config'
 import path from 'node:path'
 
-const src = (sub: string) => path.resolve(__dirname, '..', 'src', sub)
+const UI_SRC = path.resolve(__dirname, '..', 'packages', 'ui', 'src')
+const src = (sub: string) => path.resolve(UI_SRC, sub)
 
 export default defineConfig({
   resolve: {
     alias: {
-      '@/': `${path.resolve(__dirname, '..', 'src')}/`,
+      '@/': `${UI_SRC}/`,
       '@components': src('components'),
       '@services': src('services'),
       '@hooks': src('hooks'),
