@@ -29,7 +29,12 @@ COPY --from=build /app /app
 
 EXPOSE 8081
 
+# 127.0.0.1 not localhost: Hono binds 0.0.0.0 (IPv4 only). Alpine
+# busybox wget resolves `localhost` to ::1 (IPv6) first and gets
+# Connection refused since the server isn't on v6 — Docker marks the
+# container unhealthy even though it's serving fine. Same trap that
+# bit the Vite proxy on Windows (#69).
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD wget -q --spider http://localhost:8081/health || exit 1
+  CMD wget -q --spider http://127.0.0.1:8081/health || exit 1
 
 CMD ["npx", "tsx", "src/index.ts"]
