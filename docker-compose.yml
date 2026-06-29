@@ -36,6 +36,30 @@ services:
       - adu-net
     restart: unless-stopped
 
+  # Phase D1 canary: TS port of server.py running alongside Python.
+  # Reachable internally on adu-net (Caddy can route to it when ready)
+  # and on the host at 127.0.0.1:8889 for ssh-based verification. Not
+  # public-facing until Caddy is updated in a separate PR.
+  adu-api-ts:
+    build:
+      context: .
+      dockerfile: packages/api/Dockerfile
+    container_name: adu-api-ts
+    ports:
+      - "127.0.0.1:8889:8081"
+    environment:
+      - PORT=8081
+      - GOOGLE_SHEET_ID=${GOOGLE_SHEET_ID}
+      - GOOGLE_SERVICE_ACCOUNT_JSON=${GOOGLE_SERVICE_ACCOUNT_JSON:-}
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/.gcp-service-account.json
+      - WHITELISTED_EMAILS=${WHITELISTED_EMAILS:-dtle82@gmail.com}
+      - VITE_WHITELISTED_EMAILS=${VITE_WHITELISTED_EMAILS:-}
+    volumes:
+      - ./.gcp-service-account.json:/app/.gcp-service-account.json:ro
+    networks:
+      - adu-net
+    restart: unless-stopped
+
   prometheus:
     image: prom/prometheus:latest
     container_name: adu-prometheus

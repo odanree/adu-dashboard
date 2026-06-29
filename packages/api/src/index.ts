@@ -139,7 +139,11 @@ app.post('/api/expenses', async (c) => {
   return c.json({ success: true, message: 'Change order added', data })
 })
 
+// Bind 0.0.0.0 so Docker's published port can reach us. In compose the
+// published port is restricted to 127.0.0.1 on the host, and outside
+// Docker (local `npm run api:dev`) binding all interfaces is fine since
+// the dev box's firewall handles external exposure.
 const port = Number.parseInt(process.env.PORT ?? '8081', 10)
-serve({ fetch: app.fetch, port, hostname: '127.0.0.1' }, ({ address, port }) => {
+serve({ fetch: app.fetch, port, hostname: '0.0.0.0' }, ({ address, port }) => {
   console.log(`@adu-dashboard/api listening on http://${address}:${port}`)
 })

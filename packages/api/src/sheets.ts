@@ -9,6 +9,7 @@
  *                                   cumulative, actual, dateCompleted
  */
 
+import { readFileSync } from 'node:fs'
 import { google } from 'googleapis'
 import { CANONICAL_EXPENSES } from './phase-categories.js'
 import type { ADUData, ExpenseCategory, PaymentMilestone } from './types.js'
@@ -27,13 +28,33 @@ const parseCurrency = (value: unknown): number => {
   return Number.isFinite(n) ? n : 0
 }
 
+/**
+ * Resolve service-account credentials from env or file. Matches the
+ * Python backend's two-source lookup (server.py:get_sheets_service):
+ *   1. GOOGLE_SERVICE_ACCOUNT_JSON — full JSON inline (preferred for
+ *      local dev where the JSON sits in .env).
+ *   2. GOOGLE_APPLICATION_CREDENTIALS — path to a mounted JSON file
+ *      (how the Hetzner stack injects creds — the deploy writes
+ *      /opt/adu-dashboard/.gcp-service-account.json then mounts it
+ *      read-only into the container).
+ */
+const loadCredentials = () => {
+  const inline = process.env.GOOGLE_SERVICE_ACCOUNT_JSON
+  if (inline) return JSON.parse(inline)
+
+  const path = process.env.GOOGLE_APPLICATION_CREDENTIALS
+  if (path) return JSON.parse(readFileSync(path, 'utf8'))
+
+  throw new Error(
+    'Service-account credentials not configured (set GOOGLE_SERVICE_ACCOUNT_JSON or GOOGLE_APPLICATION_CREDENTIALS)',
+  )
+}
+
 const getSheetsClient = (opts: { write?: boolean } = {}) => {
   const sheetId = process.env.GOOGLE_SHEET_ID
-  const credentialsJson = process.env.GOOGLE_SERVICE_ACCOUNT_JSON
   if (!sheetId) throw new Error('GOOGLE_SHEET_ID not set')
-  if (!credentialsJson) throw new Error('GOOGLE_SERVICE_ACCOUNT_JSON not set')
 
-  const credentials = JSON.parse(credentialsJson)
+  const credentials = loadCredentials()
   const scopes = opts.write ? WRITE_SCOPES : READ_SCOPES
   const auth = new google.auth.GoogleAuth({ credentials, scopes })
   return { sheets: google.sheets({ version: 'v4', auth }), sheetId }
