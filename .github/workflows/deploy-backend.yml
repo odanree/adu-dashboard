@@ -8,6 +8,7 @@ on:
       - 'Dockerfile'
       - 'requirements.txt'
       - 'docker-compose.yml'
+      - 'packages/api/**'
       - '.github/workflows/deploy-backend.yml'
 
 jobs:
@@ -41,7 +42,7 @@ jobs:
           host: ${{ secrets.HETZNER_HOST }}
           username: root
           key: ${{ secrets.HETZNER_SSH_KEY }}
-          source: "server.py,Dockerfile,requirements.txt,docker-compose.yml"
+          source: "server.py,Dockerfile,requirements.txt,docker-compose.yml,packages/api/**"
           target: /opt/adu-dashboard/
 
       - name: Sync secrets into /opt/adu-dashboard/.env (merge, not overwrite)
@@ -107,3 +108,42 @@ jobs:
             curl -sf http://127.0.0.1:8888/health > /dev/null \
               && echo "✅ /health OK" \
               || (echo "❌ /health failed"; docker compose logs --tail 50 adu-api; exit 1)
+
+      # Phase D1 canary: build + start adu-api-ts alongside adu-api. This
+      # step is additive — if it fails, Python adu-api is unaffected
+      # (already recreated in the previous step). Both containers serve
+      # the same sheet on different internal ports; Caddy still routes
+      # /api/* to adu-api until a separate Caddy PR flips it.
+      - name: Build and recreate adu-api-ts (canary, Python untouched)
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HETZNER_HOST }}
+          username: root
+          key: ${{ secrets.HETZNER_SSH_KEY }}
+          command_timeout: 30m
+          script: |
+            set -euo pipefail
+            cd /opt/adu-dashboard
+
+            OLD_ID=$(docker inspect -f '{{.Id}}' adu-api-ts 2>/dev/null || echo "none")
+
+            docker compose up -d --build --force-recreate adu-api-ts
+
+            sleep 4
+            NEW_ID=$(docker inspect -f '{{.Id}}' adu-api-ts)
+
+            if [ "$OLD_ID" = "$NEW_ID" ]; then
+              echo "❌ adu-api-ts container ID did not change — recreate failed"
+              docker compose logs --tail 50 adu-api-ts
+              exit 1
+            fi
+            echo "✅ adu-api-ts recreated (was: ${OLD_ID:0:12}, now: ${NEW_ID:0:12})"
+
+            curl -sf http://127.0.0.1:8889/health > /dev/null \
+              && echo "✅ adu-api-ts /health OK" \
+              || (echo "❌ adu-api-ts /health failed"; docker compose logs --tail 50 adu-api-ts; exit 1)
+
+            # Sanity-check that the canary returns canonical or live data
+            # shape. Doesn't compare against Python here (that's the
+            # operator's job during canary verification).
+            curl -sf http://127.0.0.1:8889/api/data | head -c 200 || true
