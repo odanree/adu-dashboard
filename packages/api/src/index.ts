@@ -25,7 +25,7 @@ import { resolve } from 'node:path'
 // Load .env from repo root (two levels up from packages/api/src/)
 loadDotenv({ path: resolve(import.meta.dirname, '..', '..', '..', '.env') })
 
-import { appendExpenseRow, fetchFromSheets } from './sheets.js'
+import { appendExpenseRow, fetchADUData } from './sheets.js'
 import { categoryFor } from './phase-categories.js'
 import { isWhitelisted, sheetsLinkResponse } from './whitelist.js'
 
@@ -73,27 +73,12 @@ app.get('/api/expenses-signoff', (c) =>
   }),
 )
 
-const handleData = async () => {
-  try {
-    const data = await fetchFromSheets()
-    return { status: 200 as const, body: data }
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unknown error'
-    console.error('Sheet fetch failed:', message)
-    return { status: 500 as const, body: { error: 'Failed to fetch sheet data', message } }
-  }
-}
-
-// /api/data and /api/refresh are behaviourally identical for now — the
-// in-memory/file cache that would distinguish them lands in Phase C4.
-app.get('/api/data', async (c) => {
-  const r = await handleData()
-  return c.json(r.body, r.status)
-})
-app.get('/api/refresh', async (c) => {
-  const r = await handleData()
-  return c.json(r.body, r.status)
-})
+// /api/data and /api/refresh are behaviourally identical (matches Python:
+// fetch_adu_data is the body of both endpoints there too — both always
+// hit sheets, neither reads any cache). Both use the wrapper that falls
+// back to canonical data if Sheets is down.
+app.get('/api/data', async (c) => c.json(await fetchADUData()))
+app.get('/api/refresh', async (c) => c.json(await fetchADUData()))
 
 app.get('/api/whitelist-check', (c) => {
   const email = c.req.query('email') ?? ''
@@ -147,14 +132,11 @@ app.post('/api/expenses', async (c) => {
   console.log(`✅ Change order added to row ${result.row}: phase=${phase} task='${task}' cost=$${cost}`)
 
   // Match Python: returns refreshed data so the UI can re-render without
-  // a follow-up fetch. If the refetch itself fails, surface as 500.
-  try {
-    const data = await fetchFromSheets()
-    return c.json({ success: true, message: 'Change order added', data })
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unknown error'
-    return c.json({ error: message }, 500)
-  }
+  // a follow-up fetch. Uses the fallback wrapper so a transient sheet
+  // failure here doesn't 500 (the write already succeeded — surfacing
+  // canonical data is the better failure mode).
+  const data = await fetchADUData()
+  return c.json({ success: true, message: 'Change order added', data })
 })
 
 const port = Number.parseInt(process.env.PORT ?? '8081', 10)

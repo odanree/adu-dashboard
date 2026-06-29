@@ -10,6 +10,7 @@
  */
 
 import { google } from 'googleapis'
+import { CANONICAL_EXPENSES } from './phase-categories.js'
 import type { ADUData, ExpenseCategory, PaymentMilestone } from './types.js'
 
 const READ_SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
@@ -152,5 +153,32 @@ export const fetchFromSheets = async (): Promise<ADUData> => {
     payments,
     lastUpdated: new Date().toISOString(),
     source: 'google_sheets',
+  }
+}
+
+/**
+ * Top-level data fetch — wraps fetchFromSheets with the canonical-fallback
+ * path that server.py:fetch_adu_data implements. If the live sheet read
+ * fails for any reason (auth, network, rate limit, sheet deleted, etc),
+ * return the hardcoded CANONICAL_EXPENSES with no payments and a
+ * 'canonical_fallback' source marker so the dashboard still renders.
+ *
+ * Skipped vs Python: the best-effort data.json write that happens on each
+ * successful fetch. Python writes it but no endpoint reads it back — pure
+ * dead persistence. The Dockerfile creates the file but nothing external
+ * consumes it. Not worth porting.
+ */
+export const fetchADUData = async (): Promise<ADUData> => {
+  try {
+    return await fetchFromSheets()
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    console.error(`Sheets fetch failed: ${message} — using canonical expenses + empty payments`)
+    return {
+      expenses: CANONICAL_EXPENSES,
+      payments: [],
+      lastUpdated: new Date().toISOString(),
+      source: 'canonical_fallback',
+    }
   }
 }
