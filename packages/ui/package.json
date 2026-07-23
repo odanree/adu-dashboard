@@ -8,23 +8,28 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "lint:antipatterns": "eslint src --config eslint.config.js",
+    "lint:antipatterns:count": "eslint src --config eslint.config.js --format json | node -e \"let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{const r=JSON.parse(d);console.log(r.reduce((n,f)=>n+f.messages.length,0))})\""
   },
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "@tanstack/react-query": "^5.59.0",
     "axios": "^1.6.0",
-    "@tanstack/react-query": "^5.59.0"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
+    "@types/node": "^20.0.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
-    "@types/node": "^20.0.0",
-    "typescript": "^5.3.0",
-    "vite": "^5.0.0",
+    "@typescript-eslint/parser": "^8.65.0",
     "@vitejs/plugin-react": "^4.2.0",
-    "tailwindcss": "^3.4.0",
+    "autoprefixer": "^10.4.0",
+    "eslint": "^9.39.5",
+    "eslint-plugin-react-you-might-not-need-an-effect": "^0.4.7",
     "postcss": "^8.4.0",
-    "autoprefixer": "^10.4.0"
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.3.0",
+    "vite": "^5.0.0"
   }
 }

@@ -1,0 +1,66 @@
+# Post-merge anti-pattern counter — one row per commit-to-`master`,
+# appended to .audit/counts.jsonl. Gives us a time-series to graph the
+# effectiveness of the tier-1 lint gate.
+#
+# Pattern: append-only durable ledger + bot-authored commit. The bot's
+# commit skips CI (paths-ignore) so we don't recurse. If you want a
+# chart, `jq` the JSONL locally or wire it into any external dashboard —
+# the file is the API.
+
+name: antipattern-counts
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "packages/ui/**"
+      - ".github/workflows/antipattern-counts.yml"
+
+concurrency:
+  group: antipattern-counts
+  cancel-in-progress: false
+
+jobs:
+  count-and-log:
+    name: append count row
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: 'npm'
+      - name: Install deps
+        run: npm install
+      - name: Count anti-patterns
+        id: count
+        run: |
+          count=$(npm run lint:antipatterns:count --workspace=@adu-dashboard/ui 2>/dev/null | tail -n 1 || echo 0)
+          echo "count=$count" >> "$GITHUB_OUTPUT"
+      - name: Append row to .audit/counts.jsonl
+        run: |
+          mkdir -p .audit
+          ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          sha=$(git rev-parse --short HEAD)
+          row=$(printf '{"ts":"%s","sha":"%s","tier1_you_might_not_need_effect":%s}' \
+                "$ts" "$sha" "${{ steps.count.outputs.count }}")
+          echo "$row" >> .audit/counts.jsonl
+          echo "Appended: $row"
+      - name: Commit updated ledger
+        run: |
+          if git diff --quiet .audit/counts.jsonl; then
+            echo "No changes to counts.jsonl — skipping commit"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .audit/counts.jsonl
+          # [skip ci] breaks the loop — the auto-commit doesn't
+          # re-trigger this workflow. counts.jsonl is auto-managed;
+          # humans should never hand-edit it.
+          git commit -m "chore(audit): tier-1 count ${{ steps.count.outputs.count }} for ${GITHUB_SHA:0:7} [skip ci]"
+          git push
