@@ -1,9 +1,25 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { execSync } from 'node:child_process'
 import path from 'node:path'
+import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite'
+
+// Bake the current git SHA into the bundle so the tier-3 profiler sink
+// can attribute each perf event to the deploy that produced it. Falls
+// back to 'dev' if git isn't available at build time (e.g. inside a
+// container without .git). See packages/ui/src/utils/perfSink.ts.
+const commitSha = (() => {
+  try {
+    return execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim()
+  } catch {
+    return 'dev'
+  }
+})()
 
 export default defineConfig({
   plugins: [react()],
+  define: {
+    __COMMIT_SHA__: JSON.stringify(commitSha),
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
