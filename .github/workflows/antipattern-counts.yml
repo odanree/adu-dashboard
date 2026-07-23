@@ -2,10 +2,17 @@
 # appended to .audit/counts.jsonl. Gives us a time-series to graph the
 # effectiveness of the tier-1 lint gate.
 #
-# Pattern: append-only durable ledger + bot-authored commit. The bot's
-# commit skips CI (paths-ignore) so we don't recurse. If you want a
-# chart, `jq` the JSONL locally or wire it into any external dashboard —
-# the file is the API.
+# Pattern: append-only durable ledger + bot-authored PR + immediate
+# self-merge. The bot creates a branch, commits the ledger row, opens
+# a PR against master, and merges it in the same job. Respects the
+# repo's ruleset (which requires all master changes go through a PR)
+# without needing bypass permissions — critical for personal-account
+# repos where GitHub Apps can't be added to ruleset bypass lists.
+#
+# Only fires when the count actually changes vs the last ledger row,
+# to keep PR-list noise minimal. If the count is stable across N
+# merges, the ledger just skips those N — you can still see the
+# stable-count period in the git log between rows.
 
 name: antipattern-counts
 
@@ -22,17 +29,21 @@ concurrency:
 
 jobs:
   count-and-log:
-    name: append count row
+    name: append count row via bot PR
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
+
       - name: Install deps
         run: |
           if [ -f bun.lock ]; then
@@ -40,31 +51,71 @@ jobs:
           else
             bun install
           fi
+
       - name: Count anti-patterns
         id: count
         run: |
           count=$(cd packages/ui && bun run lint:antipatterns:count 2>/dev/null | tail -n 1 || echo 0)
           echo "count=$count" >> "$GITHUB_OUTPUT"
-      - name: Append row to .audit/counts.jsonl
+          echo "Current tier-1 count: $count"
+
+      - name: Skip if count unchanged vs last ledger row
+        id: check_unchanged
+        env:
+          COUNT: ${{ steps.count.outputs.count }}
         run: |
-          mkdir -p .audit
-          ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          sha=$(git rev-parse --short HEAD)
-          row=$(printf '{"ts":"%s","sha":"%s","tier1_you_might_not_need_effect":%s}' \
-                "$ts" "$sha" "${{ steps.count.outputs.count }}")
-          echo "$row" >> .audit/counts.jsonl
-          echo "Appended: $row"
-      - name: Commit updated ledger
-        run: |
-          if git diff --quiet .audit/counts.jsonl; then
-            echo "No changes to counts.jsonl — skipping commit"
-            exit 0
+          prev_count=$(tail -n 1 .audit/counts.jsonl 2>/dev/null \
+            | grep -oE '"tier1_you_might_not_need_effect":[0-9]+' \
+            | grep -oE '[0-9]+$' || echo "none")
+          echo "Previous ledger count: $prev_count"
+          if [ "$prev_count" = "$COUNT" ]; then
+            echo "Count unchanged ($prev_count) — skipping ledger PR"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Create ledger PR branch
+        if: steps.check_unchanged.outputs.skip == 'false'
+        id: pr_branch
+        env:
+          COUNT: ${{ steps.count.outputs.count }}
+        run: |
+          # Branch name includes SHA so parallel merges don't collide.
+          short_sha="${GITHUB_SHA:0:7}"
+          branch="audit/count-${short_sha}"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+          echo "short_sha=$short_sha" >> "$GITHUB_OUTPUT"
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+
+          mkdir -p .audit
+          ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          row=$(printf '{"ts":"%s","sha":"%s","tier1_you_might_not_need_effect":%s}' \
+                "$ts" "$short_sha" "$COUNT")
+          echo "$row" >> .audit/counts.jsonl
+
           git add .audit/counts.jsonl
-          # [skip ci] breaks the loop — the auto-commit doesn't
-          # re-trigger this workflow. counts.jsonl is auto-managed;
-          # humans should never hand-edit it.
-          git commit -m "chore(audit): tier-1 count ${{ steps.count.outputs.count }} for ${GITHUB_SHA:0:7} [skip ci]"
-          git push
+          git commit -m "chore(audit): tier-1 count $COUNT for $short_sha"
+          git push origin "$branch"
+
+      - name: Open + immediately merge the ledger PR
+        if: steps.check_unchanged.outputs.skip == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: ${{ steps.pr_branch.outputs.branch }}
+          SHORT_SHA: ${{ steps.pr_branch.outputs.short_sha }}
+          COUNT: ${{ steps.count.outputs.count }}
+        run: |
+          title="chore(audit): tier-1 count $COUNT for $SHORT_SHA"
+          body="Automated ledger update after merge of $SHORT_SHA. Tier-1 count: $COUNT. Do not hand-edit .audit/counts.jsonl."
+
+          pr_url=$(gh pr create --base master --head "$BRANCH" --title "$title" --body "$body")
+          echo "Opened: $pr_url"
+
+          # Immediate merge (no wait). PR touches only .audit/counts.jsonl —
+          # no paths-matched CI workflows trigger. Ruleset requires 0
+          # approving reviews.
+          gh pr merge "$pr_url" --squash --delete-branch
