@@ -20,7 +20,8 @@ import { config as loadDotenv } from 'dotenv'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
-import { resolve } from 'node:path'
+import { appendFile, mkdir } from 'node:fs/promises'
+import { dirname, resolve } from 'node:path'
 
 // Load .env from repo root (two levels up from packages/api/src/)
 loadDotenv({ path: resolve(import.meta.dirname, '..', '..', '..', '.env') })
@@ -137,6 +138,56 @@ app.post('/api/expenses', async (c) => {
   // canonical data is the better failure mode).
   const data = await fetchADUData()
   return c.json({ success: true, message: 'Change order added', data })
+})
+
+// Tier-3 anti-pattern instrumentation: React <Profiler> sink.
+//
+// Receives batched slow-commit events from the frontend's <Profiler>
+// wrapping (see packages/ui/src/util/perfSink.ts — landing in a
+// follow-up PR). Appends to a JSONL file for later aggregation.
+//
+// Pattern: production-side telemetry sink with append-only durable
+// storage. Deliberately dumb — no per-event auth, no aggregation in
+// line, minimal schema validation. A downstream aggregator (offline
+// / cron) reads the JSONL and produces the perf trend view.
+//
+// Storage: `/app/data/perf-profile.jsonl` by default (Hetzner
+// container path). Set PERF_LOG_PATH env var to override. If you want
+// the file to survive container rebuilds, add a bind mount to
+// docker-compose.yml: `- ./data:/app/data`.
+const PERF_LOG_PATH = process.env.PERF_LOG_PATH ?? '/app/data/perf-profile.jsonl'
+
+// biome-ignore lint/suspicious/noExplicitAny: perf events are structural, not typed
+type PerfEvent = Record<string, any>
+
+app.post('/api/perf/profile', async (c) => {
+  type Body = { sha?: unknown; ua?: unknown; events?: unknown }
+  let body: Body
+  try {
+    body = await c.req.json<Body>()
+  } catch {
+    return c.json({ error: 'Invalid JSON body' }, 400)
+  }
+
+  const events = Array.isArray(body.events) ? (body.events as PerfEvent[]) : []
+  if (events.length === 0) return c.json({ ok: true, wrote: 0 })
+
+  const sha = typeof body.sha === 'string' ? body.sha : 'unknown'
+  const ua = typeof body.ua === 'string' ? body.ua : ''
+  const receivedAt = Date.now() / 1000
+
+  try {
+    await mkdir(dirname(PERF_LOG_PATH), { recursive: true })
+    const rows = events
+      .map((ev) => `${JSON.stringify({ sha, ua, t: receivedAt, ev })}\n`)
+      .join('')
+    await appendFile(PERF_LOG_PATH, rows)
+  } catch (err) {
+    console.warn('perf sink write failed:', err)
+    return c.json({ error: 'sink unavailable' }, 503)
+  }
+
+  return c.json({ ok: true, wrote: events.length })
 })
 
 // Bind 0.0.0.0 so Docker's published port can reach us. In compose the
