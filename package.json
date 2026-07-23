@@ -7,19 +7,19 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "npm run dev --workspace=@adu-dashboard/ui",
-    "build": "npm run build --workspace=@adu-dashboard/ui",
-    "preview": "npm run preview --workspace=@adu-dashboard/ui",
-    "type-check": "npm run type-check --workspaces --if-present",
-    "api:dev": "npm run dev --workspace=@adu-dashboard/api",
-    "api:start": "npm run start --workspace=@adu-dashboard/api",
+    "dev": "bun run --filter @adu-dashboard/ui dev",
+    "build": "bun run --filter @adu-dashboard/ui build",
+    "preview": "bun run --filter @adu-dashboard/ui preview",
+    "type-check": "bun run --filter @adu-dashboard/ui type-check && bun run --filter @adu-dashboard/api type-check",
+    "api:dev": "bun run --filter @adu-dashboard/api dev",
+    "api:start": "bun run --filter @adu-dashboard/api start",
     "lint": "biome lint packages",
     "format": "biome format --write packages",
     "check": "biome check packages",
-    "test": "cd tests && npm install && npm test",
-    "test:e2e": "cd tests && npm install && npm run test:e2e",
-    "test:all": "cd tests && npm install && npm run test:all",
-    "test:watch": "cd tests && npm install && npm test -- --watch"
+    "test": "cd tests && bun install && bun run test",
+    "test:e2e": "cd tests && bun install && bun run test:e2e",
+    "test:all": "cd tests && bun install && bun run test:all",
+    "test:watch": "cd tests && bun install && bun run test -- --watch"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4"

@@ -6,7 +6,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test --config=e2e/playwright.config.ts",
-    "test:all": "npm run test && npm run test:e2e"
+    "test:all": "bun run test && bun run test:e2e"
   },
   "devDependencies": {
     "@playwright/test": "^1.40.0",

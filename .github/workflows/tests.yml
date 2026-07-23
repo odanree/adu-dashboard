@@ -10,28 +10,29 @@ jobs:
   lint-and-type-check:
     name: Lint & Type Check
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [20.x]
-
     steps:
       - uses: actions/checkout@v4
 
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+      - uses: oven-sh/setup-bun@v2
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
+          bun-version: latest
 
       - name: Install dependencies
-        run: npm install
+        # Prefer --frozen-lockfile once bun.lock is committed. Falls back
+        # to unpinned install for the pre-lockfile transition (first CI
+        # run after switching from npm). Follow-up PR pins the lock.
+        run: |
+          if [ -f bun.lock ]; then
+            bun install --frozen-lockfile
+          else
+            bun install
+          fi
 
       - name: Run Biome
-        run: npm run lint
+        run: bun run lint
 
       - name: Type check
-        run: npm run type-check
+        run: bun run type-check
 
   antipattern-lint:
     # Tier-1 counter: runs eslint-plugin-react-you-might-not-need-an-effect
@@ -55,18 +56,22 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v4
+      - uses: oven-sh/setup-bun@v2
         with:
-          node-version: 20.x
-          cache: 'npm'
+          bun-version: latest
       - name: Install dependencies
-        run: npm install
+        run: |
+          if [ -f bun.lock ]; then
+            bun install --frozen-lockfile
+          else
+            bun install
+          fi
       - name: Count anti-patterns on PR head
         id: head_count
         run: |
-          # `npm run` prefixes stdout with the invoked-script line, so
+          # `bun run` prefixes stdout with the invoked-script line, so
           # take the LAST line to get a clean numeric count.
-          count=$(npm run lint:antipatterns:count --workspace=@adu-dashboard/ui 2>/dev/null | tail -n 1 || echo 0)
+          count=$(cd packages/ui && bun run lint:antipatterns:count 2>/dev/null | tail -n 1 || echo 0)
           echo "count=$count" >> "$GITHUB_OUTPUT"
           echo "PR head: $count you-might-not-need-an-effect findings"
       - name: Checkout base branch
@@ -83,7 +88,7 @@ jobs:
             echo "count=0" >> "$GITHUB_OUTPUT"
             echo "Base branch has no eslint.config.js — treating base count as 0"
           else
-            count=$(npm run lint:antipatterns:count --workspace=@adu-dashboard/ui 2>/dev/null | tail -n 1 || echo 0)
+            count=$(cd packages/ui && bun run lint:antipatterns:count 2>/dev/null | tail -n 1 || echo 0)
             echo "count=$count" >> "$GITHUB_OUTPUT"
             echo "Base: $count findings"
           fi
@@ -97,7 +102,7 @@ jobs:
           if [ "$head" -gt "$base" ]; then
             delta=$((head - base))
             echo "::error::Anti-pattern regression: PR adds $delta new react-you-might-not-need-an-effect finding(s). Base=$base Head=$head"
-            echo "Run 'npm run lint:antipatterns --workspace=@adu-dashboard/ui' locally to see offending lines."
+            echo "Run 'cd packages/ui && bun run lint:antipatterns' locally to see offending lines."
             exit 1
           fi
           echo "OK — no regression (delta ≤ 0)."
@@ -120,7 +125,7 @@ jobs:
               `| PR head | ${head} |`,
               `| **Delta** | **+${delta}** |`,
               '',
-              'Run \`npm run lint:antipatterns --workspace=@adu-dashboard/ui\` locally to see the offending lines and fix shape.',
+              'Run \`cd packages/ui && bun run lint:antipatterns\` locally to see the offending lines and fix shape.',
             ].join('\n');
             await github.rest.issues.createComment({
               owner: context.repo.owner,
@@ -132,63 +137,72 @@ jobs:
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
-    
-    strategy:
-      matrix:
-        node-version: [20.x]
-    
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+
+      - uses: oven-sh/setup-bun@v2
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-      
+          bun-version: latest
+
       - name: Install dependencies
-        run: npm install
-      
+        run: |
+          if [ -f bun.lock ]; then
+            bun install --frozen-lockfile
+          else
+            bun install
+          fi
+
       - name: Install test dependencies
-        run: cd tests && npm install
-      
+        working-directory: tests
+        run: |
+          if [ -f bun.lock ]; then
+            bun install --frozen-lockfile
+          else
+            bun install
+          fi
+
       - name: Run unit tests
-        run: npm run test
+        run: bun run test
 
   e2e-tests:
     name: E2E Tests
     runs-on: ubuntu-latest
-    
-    strategy:
-      matrix:
-        node-version: [20.x]
-    
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+
+      - uses: oven-sh/setup-bun@v2
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-      
+          bun-version: latest
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-      
+
       - name: Install dependencies
-        run: npm install
-      
+        run: |
+          if [ -f bun.lock ]; then
+            bun install --frozen-lockfile
+          else
+            bun install
+          fi
+
       - name: Install test dependencies
-        run: cd tests && npm install
-      
+        working-directory: tests
+        run: |
+          if [ -f bun.lock ]; then
+            bun install --frozen-lockfile
+          else
+            bun install
+          fi
+
       - name: Install Playwright browsers
-        run: cd tests && npx playwright install --with-deps
-      
+        working-directory: tests
+        run: bunx playwright install --with-deps
+
       - name: Install Python dependencies
         run: pip install -r requirements.txt
-      
+
       - name: Start backend server
         run: |
           python3 server.py > /tmp/backend.log 2>&1 &
@@ -206,15 +220,15 @@ jobs:
             fi
             sleep 1
           done
-      
+
       - name: Build React app
-        run: npm run build
-      
+        run: bun run build
+
       - name: Start dev server
-        run: npm run dev > /tmp/dev.log 2>&1 &
+        run: bun run dev > /tmp/dev.log 2>&1 &
         env:
           VITE_API_URL: http://localhost:8888
-      
+
       - name: Wait for dev server
         run: |
           sleep 3
@@ -230,12 +244,12 @@ jobs:
             fi
             sleep 1
           done
-      
+
       - name: Run E2E tests
-        run: npm run test:e2e
+        run: bun run test:e2e
         env:
           VITE_API_URL: http://localhost:8888
-      
+
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: always()
@@ -247,26 +261,24 @@ jobs:
   build:
     name: Build Check
     runs-on: ubuntu-latest
-    
-    strategy:
-      matrix:
-        node-version: [20.x]
-    
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+
+      - uses: oven-sh/setup-bun@v2
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-      
+          bun-version: latest
+
       - name: Install dependencies
-        run: npm install
-      
+        run: |
+          if [ -f bun.lock ]; then
+            bun install --frozen-lockfile
+          else
+            bun install
+          fi
+
       - name: Build project
-        run: npm run build
-      
+        run: bun run build
+
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
