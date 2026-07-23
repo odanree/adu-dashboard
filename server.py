@@ -6,11 +6,12 @@ Provides API endpoints for real-time data
 
 import json
 import os
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from prometheus_fastapi_instrumentator import Instrumentator
@@ -427,6 +428,50 @@ def save_data(data: dict):
     except Exception as e:
         print(f"Error saving data: {e}")
         return JSONResponse(status_code=400, content={'error': str(e)})
+
+
+# ---------------------------------------------------------------------------
+# Tier-3 anti-pattern instrumentation: React <Profiler> sink
+#
+# Mirrors packages/api/src/index.ts's /api/perf/profile endpoint so the
+# frontend works regardless of which backend Caddy currently routes to
+# (Phase D migration is still in progress). Once Phase D flips fully to
+# Hono, this can be removed.
+#
+# Storage: /app/data/perf-profile.jsonl by default (Hetzner container
+# path). Set PERF_LOG_PATH env var to override. Add a bind mount to
+# docker-compose.yml (`- ./data:/app/data`) if you want persistence
+# across container rebuilds.
+# ---------------------------------------------------------------------------
+
+_PERF_LOG_PATH = Path(os.getenv('PERF_LOG_PATH', '/app/data/perf-profile.jsonl'))
+
+
+@app.post("/api/perf/profile")
+async def perf_profile(request: Request):
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse(status_code=400, content={'error': 'Invalid JSON body'})
+
+    events = body.get('events') if isinstance(body, dict) else None
+    if not isinstance(events, list) or not events:
+        return {'ok': True, 'wrote': 0}
+
+    sha = body.get('sha', 'unknown') if isinstance(body, dict) else 'unknown'
+    ua = body.get('ua', '') if isinstance(body, dict) else ''
+    received_at = time.time()
+
+    try:
+        _PERF_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+        with _PERF_LOG_PATH.open('a', encoding='utf-8') as f:
+            for ev in events:
+                f.write(json.dumps({'sha': sha, 'ua': ua, 't': received_at, 'ev': ev}) + '\n')
+    except OSError as exc:
+        print(f'perf sink write failed: {exc}')
+        return JSONResponse(status_code=503, content={'error': 'sink unavailable'})
+
+    return {'ok': True, 'wrote': len(events)}
 
 
 # ---------------------------------------------------------------------------

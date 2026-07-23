@@ -30,8 +30,13 @@ services:
       - GOOGLE_SERVICE_ACCOUNT_JSON=${GOOGLE_SERVICE_ACCOUNT_JSON:-}
       - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS:-}
       - WHITELISTED_EMAILS=${WHITELISTED_EMAILS:-dtle82@gmail.com}
+      # Tier-3 perf sink writes here. Shared volume so both backends
+      # (Python + Hono canary) append to the same JSONL — whichever
+      # Caddy routes to gets the event.
+      - PERF_LOG_PATH=/app/data/perf-profile.jsonl
     volumes:
       - ./.gcp-service-account.json:/app/.gcp-service-account.json:ro
+      - perf_data:/app/data
     networks:
       - adu-net
     restart: unless-stopped
@@ -54,8 +59,10 @@ services:
       - GOOGLE_APPLICATION_CREDENTIALS=/app/.gcp-service-account.json
       - WHITELISTED_EMAILS=${WHITELISTED_EMAILS:-dtle82@gmail.com}
       - VITE_WHITELISTED_EMAILS=${VITE_WHITELISTED_EMAILS:-}
+      - PERF_LOG_PATH=/app/data/perf-profile.jsonl
     volumes:
       - ./.gcp-service-account.json:/app/.gcp-service-account.json:ro
+      - perf_data:/app/data
     networks:
       - adu-net
     restart: unless-stopped
@@ -91,6 +98,7 @@ services:
     restart: unless-stopped
 
 volumes:
+  perf_data:
   prometheus_data:
   grafana_data:
 
